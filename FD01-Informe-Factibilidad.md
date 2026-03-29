@@ -1,230 +1,311 @@
-<center>
+# UNIVERSIDAD PRIVADA DE TACNA
 
-[comment]: <img src="./media/media/image1.png" style="width:1.088in;height:1.46256in" alt="escudo.png" />
+# FACULTAD DE INGENIERÍA
 
-![./media/media/image1.png](./media/logo-upt.png)
+# Escuela Profesional de Ingeniería de Sistemas
 
-**UNIVERSIDAD PRIVADA DE TACNA**
+## Proyecto Administrador de BD en consola o terminal
 
-**FACULTAD DE INGENIERIA**
+**Curso:** Base de Datos II
 
-**Escuela Profesional de Ingeniería de Sistemas**
+**Docente:** Patrick Cuadros Quiroga
 
-**Proyecto *{Nombre de Proyecto}***
+**Integrantes:**
 
-Curso: *{Nombre de Asignatura}*
+Jahuira Pilco, Dayan Elvis (2022075749)
 
-Docente: *{Nombre de Docente}*
+Mamani Cori, Cristhian Carlos (2023077282)
 
-Integrantes:
-
-***{Apellidos y nombres del estudiante (código universitario)}***
+---
 
 **Tacna – Perú**
 
-***{Año}***
+**2026**
 
-**  
-**
-</center>
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+---
 
-Sistema *{Nombre del Sistema}*
+# Sistema Administrador de BD en consola o terminal
 
-Informe de Factibilidad
+# Informe de Factibilidad
 
-Versión *{1.0}*
+**Versión 1.0**
 
-|CONTROL DE VERSIONES||||||
-| :-: | :- | :- | :- | :- | :- |
-|Versión|Hecha por|Revisada por|Aprobada por|Fecha|Motivo|
-|1\.0|MPV|ELV|ARV|10/10/2020|Versión Original|
+---
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+## CONTROL DE VERSIONES
 
-# **INDICE GENERAL**
+| Versión | Hecha por | Revisada por | Aprobada por | Fecha | Motivo |
+|---------|-----------|--------------|--------------|-------|--------|
+| 1.0 | Jahuira Pilco, Dayan Elvis | Mamani Cori, Cristhian Carlos | Jahuira Pilco, Dayan Elvis | 26/04/2026 | Versión Original |
 
-[1. Descripción del Proyecto](#_Toc52661346)
+---
 
-[2. Riesgos](#_Toc52661347)
+## ÍNDICE GENERAL
 
-[3. Análisis de la Situación actual](#_Toc52661348)
+1. Descripción del Proyecto
+2. Riesgos
+3. Análisis de la Situación actual
+4. Estudio de Factibilidad
+5. Análisis Financiero
+6. Conclusiones
 
-[4. Estudio de Factibilidad](#_Toc52661349)
+---
 
-[4.1 Factibilidad Técnica](#_Toc52661350)
+## 1. Descripción del Proyecto
 
-[4.2 Factibilidad económica](#_Toc52661351)
+### 1.1. Nombre del proyecto
 
-[4.3 Factibilidad Operativa](#_Toc52661352)
+Administrador de BD en consola o terminal
 
-[4.4 Factibilidad Legal](#_Toc52661353)
+### 1.2. Duración del proyecto
 
-[4.5 Factibilidad Social](#_Toc52661354)
+1 mes
 
-[4.6 Factibilidad Ambiental](#_Toc52661355)
+### 1.3. Descripción
 
-[5. Análisis Financiero](#_Toc52661356)
+El presente proyecto tiene como finalidad el desarrollo de una aplicación de tipo CLI (Command Line Interface) orientada a la administración de bases de datos relacionales. El sistema permitirá a los usuarios interactuar con un gestor de base de datos como PostgreSQL, MySQL o SQLite, mediante comandos estructurados definidos por la aplicación.
 
-[6. Conclusiones](#_Toc52661357)
+La herramienta será capaz de procesar instrucciones ingresadas por el usuario, interpretarlas mediante un módulo de análisis sintáctico y ejecutarlas sobre la base de datos, permitiendo operaciones de definición y manipulación de datos (DDL y DML). Asimismo, el sistema proporcionará mecanismos básicos de validación, control de errores y visualización de resultados en formato legible dentro del entorno de consola.
 
+Este proyecto se orienta tanto al aprendizaje práctico de la administración de bases de datos como al desarrollo de habilidades en el diseño de sistemas interactivos basados en comandos.
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+### 1.4. Objetivos
 
-**<u>Informe de Factibilidad</u>**
+#### 1.4.1. Objetivo general
 
-1. <span id="_Toc52661346" class="anchor"></span>**Descripción del Proyecto**
+Desarrollar una aplicación en consola que permita administrar una base de datos mediante comandos, facilitando la ejecución de operaciones básicas de gestión de datos.
 
-    1.1. Nombre del proyecto
+#### 1.4.2. Objetivos Específicos
 
-    1.2. Duración del proyecto
+- Implementar la conexión a una base de datos existente
+- Desarrollar un sistema de comandos en consola (CLI)
+- Permitir operaciones CRUD sobre las tablas
+- Mostrar resultados de manera clara en consola
+- Validar comandos y manejar errores básicos
 
-    1.3. Descripción
+---
 
-        En que consiste el proyecto/importancia del mismo, contexto en que se va desenvolver
+## 2. Riesgos
 
-    1.4. Objetivos
+- Falta de experiencia en conexión a bases de datos
+- Problemas de configuración del entorno
+- Errores en la interpretación de comandos
+- Limitaciones de tiempo para completar todas las funcionalidades
+- Fallas en la integración entre módulos
 
-        1.4.1 Objetivo general
-        1.4.2 Objetivos Específicos
-            Para cada objetivo específico se indicara que se va a lograr
+---
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+## 3. Análisis de la Situación actual
 
-2. <span id="_Toc52661347" class="anchor"></span>**Riesgos**
+### 3.1. Planteamiento del problema
 
-    Señale los riesgos que pudieran afectar el éxito del proyecto.}*
+Las herramientas actuales de administración de bases de datos, en su mayoría, se presentan mediante interfaces gráficas que abstraen el funcionamiento interno de las operaciones, lo que limita la comprensión profunda de los procesos de manipulación de datos.
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+Por otro lado, en entornos profesionales y de servidores, el uso de interfaces de línea de comandos es predominante debido a su eficiencia, bajo consumo de recursos y capacidad de automatización. Sin embargo, dichas herramientas suelen presentar una curva de aprendizaje elevada.
 
-3. <span id="_Toc52661348" class="anchor"></span>**Análisis de la Situación actual**
+En este contexto, se identifica la necesidad de desarrollar una solución que permita comprender y aplicar los conceptos de administración de bases de datos mediante una interfaz de consola simplificada y controlada.
 
-    3.1. Planteamiento del problema
+### 3.2. Consideraciones de hardware y software
 
-            Describa antecedentes y situación actual, explicando la problemática y/o necesidad que será resuelta con el proyecto propuesto.
+| Tipo de Recurso | Nombre | Descripción |
+|-----------------|--------|-------------|
+| Hardware | Computadora personal (PC o laptop) | Intel i5, RAM: 8 GB, HDD: 1 TB, Mouse y Teclado estándar. Equipo para desarrollar y probar el sistema. |
+| Software | Windows 10/11 | Sistema Operativo base para ejecutar herramientas de desarrollo y el sistema. |
+| Software | Python 3.8+ | Ampliamente utilizado en aplicaciones CLI; sintaxis clara; gran cantidad de bibliotecas |
+| Software | VS Code | Entorno de desarrollo gratuito con soporte para Python |
 
-    3.2. Consideraciones de hardware y software
+---
 
-            Hardware y software posibles para la implementación, se analizara lo que existe y es alcanzable, se evaluara que tecnología se puede > utilizar en el proyecto.
+## 4. Estudio de Factibilidad
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+### 4.1. Factibilidad Técnica
 
-4. <span id="_Toc52661349" class="anchor"></span>**Estudio de
-    Factibilidad**
+| Cantidad | Recurso | Descripción |
+|----------|---------|-------------|
+| 1 | Laptop | Laptop ASUS, Procesador Ryzen, RAM: 16 GB, SSD: 1 TB y Mouse |
+| 1 | Laptop | Laptop Lenovo, Procesador Intel Core i5 de 6ta generación, 8 GB de RAM, SSD de 500 GB y Mouse |
 
-    Describir los resultados que esperan alcanzar del estudio de factibilidad, las actividades que se realizaron para preparar la evaluación de factibilidad y por quien fue aprobado.
+**Conclusión Técnica:** El proyecto es técnicamente viable. Se cuenta con dos equipos con especificaciones adecuadas para el desarrollo. Python es un lenguaje ideal para aplicaciones CLI y no requiere hardware especializado. Las librerías necesarias para la conexión a bases de datos son de código abierto y están disponibles gratuitamente.
 
-    4.1. <span id="_Toc52661350" class="anchor"></span>Factibilidad Técnica
+---
 
-        El estudio de viabilidad técnica se enfoca en obtener un entendimiento de los recursos tecnológicos disponibles actualmente y su aplicabilidad a las necesidades que se espera tenga el proyecto. En el caso de tecnología informática esto implica una evaluación del hardware y software y como este puede cubrir las necesidades del sistema propuesto.
+### 4.2. Factibilidad Económica
 
-        Realizar una evaluación de la tecnología actual existente y la posibilidad de utilizarla en el desarrollo e implantación del sistema.*
+#### 4.2.1. Costos Generales
 
-        Describir acerca del hardware (equipos, servidor), software (aplicaciones, navegadores, sistemas operativos, dominio, internet, infraestructura de red física, etc.
+| Item | Cantidad | Costo Unitario S/. | Costo Total S/. |
+|------|----------|-------------------|-----------------|
+| Laptop para desarrollo | 2 | 2500 | 5000 |
+| Material de escritorio | 1 | 40 | 40 |
+| **Total** | | | **5040** |
 
-    4.2. <span id="_Toc52661351" class="anchor"></span>Factibilidad Económica
+#### 4.2.2. Costos operativos durante el desarrollo
 
-        El propósito del estudio de viabilidad económica, es determinar los beneficios económicos del proyecto o sistema propuesto para la organización, en contraposición con los costos.
-        Como se mencionó anteriormente en el estudio de factibilidad técnica wvaluar si la institución (departamento de TI) cuenta con las herramientas necesarias para la implantación del sistema y evaluar si la propuesta requiere o no de una inversión inicial en infraestructura informática.
-        Se plantearán los costos del proyecto.
-        Costeo del Proyecto: Consiste en estimar los costos de los recursos Humanos, materiales o consumibles y/o máquinas) directos para completar las actividades del proyecto}.*
+| Concepto | Costo Mensual S/. | Duración meses | Costo Total S/. |
+|----------|-------------------|----------------|-----------------|
+| Energía eléctrica | 80 | 1 | 80 |
+| Internet | 100 | 1 | 100 |
+| **Total** | | | **180** |
 
-        Definir los siguientes costos:
+#### 4.2.3. Costos del ambiente
 
-        4.2.1. Costos Generales
+| Recurso | Costo Unitario S/. | Cantidad | Costo Total S/. |
+|---------|-------------------|----------|-----------------|
+| Configuración de entorno de desarrollo | 50 | 1 | 50 |
+| Pruebas del sistema | 80 | 1 | 80 |
+| Repositorio GitHub | 20 | 1 | 20 |
+| **Total** | | | **150** |
 
-                Los costos generales son todos los gastos realizados en accesorios y material de oficina y de uso diario, necesarios para los procesos, tales como, papeles, plumas, cartuchos de impresora, marcadores, computadora etc. Colocar tabla de costos.
+#### 4.2.4. Costos de personal
 
-        4.2.2. Costos operativos durante el desarrollo 
-        
-                Evaluar costos necesarios para la operatividad de las actividades de la empresa durante el periodo en el que se realizara el proyecto. Los costos de operación pueden ser renta de oficina, agua, luz, teléfono, etc.
+| Rol | Cantidad | Sueldo Mensual S/. | Meses | Subtotal S/. |
+|-----|----------|-------------------|-------|--------------|
+| Analista y Desarrollador | 2 | 3000 | 1 | 6000 |
+| **Total** | | | | **6000** |
 
-        4.2.3. Costos del ambiente
+#### 4.2.5. Costos totales del desarrollo del sistema
 
-                Evaluar si se cuenta con los requerimientos técnicos para la implantación del software como el dominio, infraestructura de red, acceso a internet, etc.
+| Categoría | Total S/. |
+|-----------|-----------|
+| Costos Generales | 5,040 |
+| Costos Operativos | 180 |
+| Costos del Ambiente | 150 |
+| Costos de Personal | 6,000 |
+| **TOTAL GENERAL** | **11,370** |
 
-        4.2.4. Costos de personal
+---
 
-                Aquí se incluyen los gastos generados por el recurso humano que se necesita para el desarrollo del sistema únicamente.
+### 4.3. Factibilidad Operativa
 
-                No se considerará personal para la operación y funcionamiento del sistema.
+| Aspecto | Descripción | Estado |
+|---------|-------------|-------|
+| Usuarios | Estudiantes de cursos de bases de datos, docentes y desarrolladores que requieran administrar bases de datos desde consola | Viable |
+| Curva de aprendizaje | Baja gracias al comando help y sintaxis intuitiva | Viable |
+| Mantenimiento | El código es simple y modular, fácil de mantener | Viable |
+| Documentación | Se incluirá un manual básico dentro del repositorio | Viable |
+| Soporte | Durante el periodo académico, los desarrolladores brindarán soporte | Viable |
 
-                Incluir tabla que muestra los gastos correspondientes al personal.
+De acuerdo con el análisis presentado en la tabla, la factibilidad operativa del sistema resulta totalmente viable. Los usuarios objetivo tienen el perfil adecuado (conocimiento básico de bases de datos), el sistema incluye un comando de ayuda para facilitar su uso, y los riesgos identificados son controlables mediante una adecuada implementación de manejo de errores y documentación.
 
-                Indicar organización y roles. Indicar horario de trabajo del personal.
+---
 
-        4.2.5.  Costos totales del desarrollo del sistema
+### 4.4. Factibilidad Legal
 
-                {Totalizar costos y realizar resumen de costo final del proyecto y la forma de pago.
+| Aspecto Legal | Descripción | Cumplimiento |
+|---------------|-------------|--------------|
+| Protección de Datos Personales | El sistema no almacena ni procesa datos personales de los usuarios. Solo interactúa con bases de datos locales del usuario. | Sí |
+| Uso de Software | Python es software de código abierto con licencia PSF. Visual Studio Code es gratuito. No se requiere software comercial. | Sí |
+| Propiedad Intelectual | El código desarrollado es propiedad de los autores. Se utilizará licencia MIT para permitir uso académico y comercial. | Sí |
 
-    4.3. <span id="_Toc52661352" class="anchor"></span>Factibilidad Operativa
+---
 
-        Describir los beneficios del producto y si se tiene la capacidad por parte del cliente para mantener el sistema funcionando y garantizar el buen funcionamiento y su impacto en los usuarios. Lista de interesados.
+### 4.5. Factibilidad Social
 
-    4.4. <span id="_Toc52661353" class="anchor"></span>Factibilidad Legal
+| Aspecto | Descripción | Impacto |
+|---------|-------------|---------|
+| Estudiantes | Permite comprender el funcionamiento interno de bases de datos sin depender de interfaces gráficas | Positivo |
+| Docentes | Herramienta didáctica para enseñar SQL y administración de bases de datos | Positivo |
+| Desarrolladores | Facilita el aprendizaje de conexiones a bases de datos mediante Python | Positivo |
 
-        Determinar si existe conflicto del proyecto con restricciones legales como leyes y regulaciones del país o locales relacionadas con seguridad, protección de datos, conducta de negocio, empleo y adquisiciones.
+---
 
-    4.5. <span id="_Toc52661354" class="anchor"></span>Factibilidad Social 
+### 4.6. Factibilidad Ambiental
 
-        Evaluar influencias y asuntos de índole social y cultural como el clima político, códigos de conducta y ética*
+| Aspecto | Descripción | Impacto |
+|---------|-------------|---------|
+| Uso de papel | No requiere documentación física ni reportes impresos | Positivo |
+| Consumo energético | Funciona en equipos de bajo consumo, sin requerir hardware adicional | Positivo |
+| Residuos electrónicos | Al ser software puro, no genera residuos físicos | Positivo |
 
-    4.6. <span id="_Toc52661355" class="anchor"></span>Factibilidad Ambiental
+---
 
-        Evaluar influencias y asuntos de índole ambiental como el impacto y repercusión en el medio ambiente.
+## 5. Análisis Financiero
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+### 5.1. Justificación de la Inversión
 
-5. <span id="_Toc52661356" class="anchor"></span>**Análisis Financiero**
+La inversión en el desarrollo del Administrador de BD en consola se justifica por los siguientes motivos:
 
-    El plan financiero se ocupa del análisis de ingresos y gastos asociados a cada proyecto, desde el punto de vista del instante temporal en que se producen. Su misión fundamental es detectar situaciones financieramente inadecuadas.
-    Se tiene que estimar financieramente el resultado del proyecto.
+- Eliminación de dependencia de herramientas gráficas comerciales como DBeaver Pro o Navicat
+- Reducción del tiempo de aprendizaje para comandos SQL mediante una interfaz simplificada
+- Automatización de tareas repetitivas de administración de bases de datos
+- Disponibilidad de una herramienta didáctica gratuita para la enseñanza de bases de datos
+- Bajos costos en infraestructura por ser una aplicación 100% Python
 
-    5.1. Justificación de la Inversión
+### 5.2. Beneficios del Proyecto
 
-        5.1.1. Beneficios del Proyecto
+**Beneficios Intangibles**
 
-            El beneficio se calcula como el margen económico menos los costes de oportunidad, que son los márgenes que hubieran podido obtenerse de haber dedicado el capital y el esfuerzo a otras actividades.
-            El beneficio, obtenido lícitamente, no es sólo una recompensa a la inversión, al esfuerzo y al riesgo asumidos por el empresario, sino que también es un factor esencial para que las empresas sigan en el  mercado e incorporen nuevas inversiones al tejido industrial y social de las naciones.
-            Describir beneficios tangibles e intangibles*
-            Beneficios tangibles: son de fácil cuantificación, generalmente están relacionados con la reducción de recursos o talento humano.
-            Beneficios intangibles: no son fácilmente cuantificables y están relacionados con elementos o mejora en otros procesos de la organización.
->
-            Ejemplo de beneficios:
+- Fortalecimiento de competencias técnicas en el equipo desarrollador
+- Contribución al aprendizaje práctico de bases de datos
+- Disponibilidad de código fuente para futuras adaptaciones
+- Independencia de plataformas comerciales
+- Código ligero y portable al usar solo Python estándar
 
-            - Mejoras en la eficiencia del área bajo estudio.
-            - Reducción de personal.
-            - Reducción de futuras inversiones y costos.
-            - Disponibilidad del recurso humano.
-            - Mejoras en planeación, control y uso de recursos.
-            - Suministro oportuno de insumos para las operaciones.
-            - Cumplimiento de requerimientos gubernamentales.
-            - Toma acertada de decisiones.
-            - Disponibilidad de información apropiada.
-            - Aumento en la confiabilidad de la información.
-            - Mejor servicio al cliente externo e interno
-            - Logro de ventajas competitivas.
-            - Valor agregado a un producto de la compañía.
-        
-        5.1.2. Criterios de Inversión
+### 5.3. Criterios de Inversión
 
-            5.1.2.1. Relación Beneficio/Costo (B/C)
+Para la evaluación financiera se considera un horizonte de 3 años, con un costo de oportunidad de capital COK del 12 por ciento anual.
 
-                En base a los costos y beneficios identificados se evalúa si es factible el desarrollo del proyecto. 
-                Si se presentan varias alternativas de solución se evaluará cada una de ellas para determinar la mejor solución desde el punto de vista del > retorno de la inversión
-                El B/C si es mayor a uno, se acepta el proyecto; si el B/C es igual a uno es indiferente aceptar o rechazar el proyecto y si el B/C es menor a uno se rechaza el proyecto
+**Proyección de beneficios anuales**
 
-            5.1.2.2. Valor Actual Neto (VAN)
-            
-                Valor actual de los beneficios netos que genera el proyecto. Si el VAN es mayor que cero, se acepta el proyecto; si el VAN es igual a cero es indiferente aceptar o rechazar el proyecto y si el VAN es menor que cero se rechaza el proyecto
+| Año | Beneficios S/. | Mantenimiento S/. | Beneficio Neto S/. |
+|-----|----------------|-------------------|-------------------|
+| 0 | 0 | 11,370 | -11,370 |
+| 1 | 4,500 | 400 | 4,100 |
+| 2 | 5,000 | 450 | 4,550 |
+| 3 | 5,500 | 500 | 5,000 |
 
-            5.1.2.3 Tasa Interna de Retorno (TIR)*
-                Es la tasa porcentual que indica la rentabilidad promedio anual que genera el capital invertido en el proyecto. Si la TIR es mayor que el costo de oportunidad se acepta el proyecto, si la TIR es igual al costo de oportunidad es indiferente aceptar o rechazar el proyecto, si la TIR es menor que el costo de oportunidad se rechaza el proyecto
+#### 5.3.1. Relación Beneficio Costo B/C
 
-                Costo de oportunidad de capital (COK) es la tasa de interés que podría haber obtenido con el dinero invertido en el proyecto
+Valor Presente de los Beneficios VPB = 10,847.15
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+Valor Presente de los Costos VPC = 12,441.80
 
-6. <span id="_Toc52661357" class="anchor"></span>**Conclusiones**
+**Relación B/C = 10,847.15 / 12,441.80 = 0.87**
 
-Explicar los resultados del análisis de factibilidad que nos indican si el proyecto es viable y factible.
+**Interpretación:** B/C es menor a 1, por lo tanto, los beneficios no superan a los costos.
+
+#### 5.3.2. Valor Actual Neto VAN
+
+VAN = -11,370 + 4,100/(1.12)¹ + 4,550/(1.12)² + 5,000/(1.12)³
+
+VAN = -11,370 + 3,660.89 + 3,627.26 + 3,559.00
+
+**VAN = S/. -522.85**
+
+**Interpretación:** VAN es menor a 0, por lo tanto, el proyecto no genera valor suficiente para recuperar la inversión.
+
+#### 5.3.3. Tasa Interna de Retorno TIR
+
+**TIR ≈ 9.4 por ciento**
+
+**Interpretación:** TIR 9.4% es menor al COK 12%, por lo tanto, el proyecto no es rentable.
+
+---
+
+**Resumen de Criterios de Inversión**
+
+| Indicador | Valor | Criterio | Decisión |
+|-----------|-------|----------|----------|
+| Relación B/C | 0.87 | Mayor a 1 | Rechazar |
+| VAN | S/. -522.85 | Mayor a 0 | Rechazar |
+| TIR | 9.4% | Mayor a COK 12% | Rechazar |
+
+---
+
+## 6. Conclusiones
+
+El análisis de factibilidad realizado para el proyecto Administrador de BD en consola o terminal arroja los siguientes resultados:
+
+**Factibilidad Técnica:** El proyecto es viable pues se cuenta con los conocimientos y herramientas necesarias para su desarrollo. Python con sus librerías estándar permite construir una aplicación CLI completa sin requerir infraestructura adicional.
+
+**Factibilidad Económica:** La inversión total asciende a S/. 11,370.00. Los indicadores financieros muestran resultados no favorables con un VAN de S/. -522.85, una TIR de 9.4 por ciento y una relación Beneficio Costo de 0.87, todos inferiores a los criterios mínimos establecidos.
+
+**Factibilidad Operativa:** La interfaz de línea de comandos con comando help facilita la curva de aprendizaje. Los usuarios objetivo estudiantes y docentes cuentan con el perfil adecuado.
+
+**Factibilidad Legal:** El proyecto utiliza exclusivamente software de código abierto con licencias permisivas, cumpliendo con las normativas de propiedad intelectual.
+
+**Factibilidad Social:** El impacto es positivo al contribuir con la formación de los estudiantes y ofrecer una herramienta didáctica para la enseñanza de bases de datos.
+
+**Factibilidad Ambiental:** El proyecto no genera residuos electrónicos ni consume recursos adicionales, promoviendo el uso de software libre.
+
+**Conclusión Final:** A pesar de que el proyecto es técnicamente viable y presenta beneficios sociales y educativos significativos, desde la perspectiva estrictamente financiera los indicadores muestran que no se recuperaría la inversión. Sin embargo, tratándose de un proyecto académico donde los costos de personal no representan un desembolso real y los equipos ya son propiedad de los desarrolladores, se recomienda proceder con el desarrollo considerando el valor formativo y la contribución al aprendizaje.
