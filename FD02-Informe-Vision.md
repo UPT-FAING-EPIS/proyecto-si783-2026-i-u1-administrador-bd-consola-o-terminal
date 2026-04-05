@@ -1,230 +1,347 @@
-<center>
-
-[comment]: <img src="./media/media/image1.png" style="width:1.088in;height:1.46256in" alt="escudo.png" />
-
 ![./media/media/image1.png](./media/logo-upt.png)
 
-**UNIVERSIDAD PRIVADA DE TACNA**
+# UNIVERSIDAD PRIVADA DE TACNA
 
-**FACULTAD DE INGENIERIA**
+# FACULTAD DE INGENIERÍA
 
-**Escuela Profesional de Ingeniería de Sistemas**
+# Escuela Profesional de Ingeniería de Sistemas
 
-**Proyecto *{Nombre de Proyecto}***
+## Proyecto Administrador de BD en consola o terminal
 
-Curso: *{Nombre de Asignatura}*
+**Curso:** Base de Datos II
 
-Docente: *{Nombre de Docente}*
+**Docente:** Patrick Cuadros Quiroga
 
-Integrantes:
+**Integrantes:**
 
-***{Apellidos y nombres del estudiante (código universitario)}***
+Jahuira Pilco, Dayan Elvis (2022075749)  
+Mamani Cori, Cristhian Carlos (2023077282)
 
-**Tacna – Perú**
+---
 
-***{Año}***
+**Tacna – Perú**  
+**2026**
 
-**  
-**
-</center>
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+---
 
-|CONTROL DE VERSIONES||||||
-| :-: | :- | :- | :- | :- | :- |
-|Versión|Hecha por|Revisada por|Aprobada por|Fecha|Motivo|
-|1\.0|MPV|ELV|ARV|10/10/2020|Versión Original|
+# Sistema Administrador de BD en consola o terminal
 
+# Documento de Visión
 
+**Versión 1.0**
 
+---
 
+## CONTROL DE VERSIONES
 
+| Versión | Hecha por | Revisada por | Aprobada por | Fecha | Motivo |
+|---------|-----------|--------------|--------------|-------|--------|
+| 1.0 | Jahuira Pilco, Dayan Elvis | Mamani Cori, Cristhian Carlos | Jahuira Pilco, Dayan Elvis | 04/04/2026 | Versión Original |
 
+---
 
+## ÍNDICE GENERAL
 
+1. Introducción  
+2. Posicionamiento  
+3. Descripción de interesados y usuarios  
+4. Vista General del Producto  
+5. Características del producto  
+6. Restricciones  
+7. Rangos de calidad  
+8. Precedencia y Prioridad  
+9. Otros requerimientos del producto  
+10. Conclusiones  
+11. Recomendaciones  
+12. Bibliografía  
+13. Webgrafía  
 
+---
 
+## 1. Introducción
 
+### 1.1 Propósito
 
-**Sistema *{Nombre del Sistema}***
+Definir la visión general del sistema “Administrador de Base de Datos en Consola”, estableciendo objetivos, alcance, características y actores involucrados.
 
-**Documento de Visión**
+### 1.2 Alcance
 
-**Versión *{1.0}***
-**
+El sistema permitirá administrar bases de datos mediante CLI ejecutando operaciones SQL.
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+**Dentro del alcance:**
 
-|CONTROL DE VERSIONES||||||
-| :-: | :- | :- | :- | :- | :- |
-|Versión|Hecha por|Revisada por|Aprobada por|Fecha|Motivo|
-|1\.0|MPV|ELV|ARV|10/10/2020|Versión Original|
+- Conexión a BD existentes  
+- Ejecución de SQL (SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER)  
+- Visualización en tabla  
+- Listado de tablas  
+- Manejo básico de errores  
+- Comando `help` y `exit`  
 
+**Fuera del alcance:**
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+- Motor de BD propio  
+- Interfaz gráfica  
+- Gestión de usuarios  
+- Exportación (CSV, Excel, PDF)  
+- Conexión múltiple simultánea  
+- Backups automatizados  
 
+---
 
-**INDICE GENERAL**
-#
-[1.	Introducción](#_Toc52661346)
+### 1.3 Definiciones
 
-1.1	Propósito
+| Término | Definición |
+|--------|-----------|
+| BD | Base de datos |
+| CLI | Command Line Interface |
+| CRUD | Create, Read, Update, Delete |
+| DBMS | Sistema gestor de BD |
+| SQL | Structured Query Language |
+| DDL | Data Definition Language |
+| DML | Data Manipulation Language |
 
-1.2	Alcance
+---
 
-1.3	Definiciones, Siglas y Abreviaturas
+### 1.4 Referencias
 
-1.4	Referencias
+- Documentación Python  
+- PostgreSQL  
+- MySQL  
+- SQLite  
+- Informe FD01  
 
-1.5	Visión General
+---
 
-[2.	Posicionamiento](#_Toc52661347)
+### 1.5 Visión General
 
-2.1	Oportunidad de negocio
+Desarrollar una herramienta CLI que permita interactuar con bases de datos de forma directa, reforzando el aprendizaje de SQL sin depender de interfaces gráficas.
 
-2.2	Definición del problema
+---
 
-[3.	Descripción de los interesados y usuarios](#_Toc52661348)
+## 2. Posicionamiento
 
-3.1	Resumen de los interesados
+### 2.1 Oportunidad de negocio
 
-3.2	Resumen de los usuarios
+Existe necesidad educativa de herramientas CLI simplificadas para entender BD sin abstracciones gráficas.
 
-3.3	Entorno de usuario
+### 2.2 Problema
 
-3.4	Perfiles de los interesados
+Las herramientas actuales:
 
-3.5	Perfiles de los Usuarios
+- Ocultan procesos internos  
+- Son complejas en CLI para principiantes  
 
-3.6	Necesidades de los interesados y usuarios
+---
 
-[4.	Vista General del Producto](#_Toc52661349)
+## 3. Interesados y Usuarios
 
-4.1	Perspectiva del producto
+### 3.1 Interesados
 
-4.2	Resumen de capacidades
+| Interesado | Rol | Expectativa |
+|-----------|-----|------------|
+| Docente | Supervisor | Cumplimiento técnico |
+| Estudiantes dev | Desarrollo | Aprendizaje |
+| Estudiantes usuarios | Uso | Facilidad |
+| Universidad | Institución | Calidad académica |
 
-4.3	Suposiciones y dependencias
+---
 
-4.4	Costos y precios
+### 3.2 Usuarios
 
-4.5	Licenciamiento e instalación
+| Usuario | Descripción | Frecuencia |
+|--------|-------------|-----------|
+| Básico | SQL básico | 1-2 veces/semana |
+| Intermedio | Consultas complejas | Varias veces |
+| Técnico | Admin BD | Diario |
 
-[5.	Características del producto](#_Toc52661350)
+---
 
-[6.	Restricciones](#_Toc52661351)
+### 3.3 Entorno
 
-[7.	Rangos de calidad](#_Toc52661352)
+Uso en terminal (Windows, Linux, macOS).
 
-[8.	Precedencia y Prioridad](#_Toc52661353)
+---
 
-[9.	Otros requerimientos del producto](#_Toc52661354)
+### 3.4 Perfiles interesados
 
-b) Estandares legales
+| Perfil | Responsabilidad |
+|-------|----------------|
+| Docente | Evaluar |
+| Estudiante | Desarrollar |
 
-c) Estandares de comunicación	](#_toc394513800)37
+---
 
-d) Estandaraes de cumplimiento de la plataforma	](#_toc394513800)42
+### 3.5 Perfiles usuarios
 
-e) Estandaraes de calidad y seguridad	](#_toc394513800)42
+| Perfil | Conocimiento | Uso |
+|-------|--------------|-----|
+| Básico | SQL simple | help |
+| Intermedio | SQL avanzado | consultas |
+| Técnico | Admin BD | uso total |
 
-[CONCLUSIONES](#_Toc52661355)
+---
 
-[RECOMENDACIONES](#_Toc52661356)
+### 3.6 Necesidades
 
-[BIBLIOGRAFIA](#_Toc52661357)
+| Necesidad | Prioridad |
+|----------|----------|
+| Acceso simple CLI | Alta |
+| Aprender SQL | Alta |
+| Ligero | Media |
+| Feedback claro | Media |
+| Documentación | Alta |
 
-[WEBGRAFIA](#_Toc52661358)
+---
 
+## 4. Vista General
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+### 4.1 Perspectiva
 
-**<u>Informe de Visión</u>**
+Aplicación Python que actúa como intermediario entre usuario y DBMS.
 
-1. <span id="_Toc52661346" class="anchor"></span>**Introducción**
+---
 
-    1.1	Propósito
+### 4.2 Capacidades
 
-    1.2	Alcance
+- Conexión BD  
+- SQL  
+- CRUD  
+- Tablas  
+- Resultados  
 
-    1.3	Definiciones, Siglas y Abreviaturas
+---
 
-    1.4	Referencias
+### 4.3 Suposiciones
 
-    1.5	Visión General
+- BD instalada  
+- Librerías disponibles  
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+---
 
-2. <span id="_Toc52661347" class="anchor"></span>**Posicionamiento**
+### 4.4 Costos
 
-    2.1	Oportunidad de negocio
+| Categoría | Total S/. |
+|----------|-----------|
+| Generales | 5040 |
+| Operativos | 180 |
+| Ambiente | 150 |
+| Personal | 6000 |
+| **Total** | **11370** |
 
-    2.2	Definición del problema
+---
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+### 4.5 Licencia
 
-3. <span id="_Toc52661348" class="anchor"></span>**Vista General del Producto**
+Licencia MIT.
 
-    3.1	Resumen de los interesados
+---
 
-    3.2	Resumen de los usuarios
+## 5. Características
 
-    3.3	Entorno de usuario
+**MUST**
 
-    3.4	Perfiles de los interesados
+- Conexión BD  
+- SQL  
+- Tablas  
+- help / exit  
+- Manejo errores  
 
-    3.5	Perfiles de los Usuarios
+**SHOULD**
 
-    3.6	Necesidades de los interesados y usuarios
+- tables  
+- info  
+- disconnect  
+- clear  
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+**COULD**
 
-4. <span id="_Toc52661349" class="anchor"></span>**Estudio de
-    Factibilidad**
+- help avanzado  
+- historial  
+- exportación CSV  
 
-    4.1	Perspectiva del producto
+---
 
-    4.2	Resumen de capacidades
+## 6. Restricciones
 
-    4.3	Suposiciones y dependencias
+- Conocimiento SQL  
+- BD instalada  
+- Sin GUI  
+- Dependencias Python  
+- Tiempo 1 mes  
 
-    4.4	Costos y precios
+---
 
-    4.5	Licenciamiento e instalación
+## 7. Calidad
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+- Usabilidad < 2 min  
+- Fallos < 1%  
+- Respuesta < 1s  
+- Multiplataforma  
 
-5. <span id="_Toc52661350" class="anchor"></span>**Características del producto**
+---
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+## 8. Prioridad
 
-6. <span id="_Toc52661351" class="anchor"></span>**Restricciones**
+1. REPL  
+2. SQLite  
+3. SQL  
+4. Tabla  
+5. PostgreSQL  
+6. MySQL  
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+---
 
-7. <span id="_Toc52661352" class="anchor"></span>**Rangos de Calidad**
+## 9. Otros requerimientos
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+### Legales
 
-8. <span id="_Toc52661353" class="anchor"></span>**Precedencia y Prioridad**
+- Licencia MIT  
+- Código propio  
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+### Comunicación
 
-9. <span id="_Toc52661354" class="anchor"></span>**Otros requerimientos del producto**
+- Mensajes claros  
+- Tablas ASCII  
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+### Plataforma
 
-<span id="_Toc52661355" class="anchor"></span>**CONCLUSIONES**
+- Windows/Linux/macOS  
+- Python 3.8+  
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+### Calidad y Seguridad
 
-<span id="_Toc52661356" class="anchor"></span>**RECOMENDACIONES**
+- Código modular  
+- No guardar credenciales  
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+---
 
-<span id="_Toc52661357" class="anchor"></span>**BIBLIOGRAFIA**
+## 10. Conclusiones
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+El sistema es viable, educativo y funcional para administración de BD mediante CLI.
 
-<span id="_Toc52661358" class="anchor"></span>**WEBGRAFIA**
+---
 
-<div style="page-break-after: always; visibility: hidden">\pagebreak</div>
+## 11. Recomendaciones
+
+- Probar con los 3 motores  
+- Preparar demo  
+- Verificar terminal  
+- Documentar README  
+
+---
+
+## 12. Bibliografía
+
+- Ramakrishnan  
+- Silberschatz  
+- Beaulieu  
+- Python Docs  
+
+---
+
+## 13. Webgrafía
+
+- https://docs.python.org  
+- https://postgresql.org  
+- https://dev.mysql.com  
+- https://sqlite.org  
