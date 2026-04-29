@@ -33,7 +33,7 @@ class REPL:
         self.console = Console()
         self.connector = None
         self.formatter = TableFormatter()
-        self.last_results = None  # Almacena el resultado del último SELECT
+        self.last_results = None  # Almacena el resultado del último SELECT.
 
     def _get_prompt(self):
         """Genera el prompt dinámicamente según el estado de la conexión"""
