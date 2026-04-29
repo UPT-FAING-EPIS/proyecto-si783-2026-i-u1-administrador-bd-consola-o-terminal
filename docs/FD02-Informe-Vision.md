@@ -28,7 +28,7 @@ Mamani Cori, Cristhian Carlos (2023077282)
 
 # Documento de Visión
 
-**Versión 1.0**
+**Versión 2.0**
 
 ---
 
