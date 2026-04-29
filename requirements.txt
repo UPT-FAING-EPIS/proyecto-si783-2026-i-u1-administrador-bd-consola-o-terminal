@@ -1,0 +1,17 @@
+# DB Admin CLI - Dependencias
+# Requiere Python 3.8+
+
+# Interfaz de usuario enriquecida (tablas, colores, paneles)
+rich>=12.0.0
+
+# Conectores relacionales
+psycopg2-binary>=2.9.0
+mysql-connector-python>=8.0.0
+
+# Conectores NoSQL (opcionales según el backend a usar)
+pymongo>=4.0.0
+redis>=4.0.0
+cassandra-driver>=3.25.0
+
+# Testing
+pytest>=7.0.0
