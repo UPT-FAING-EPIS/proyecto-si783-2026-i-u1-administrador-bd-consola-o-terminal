@@ -7,7 +7,7 @@ import sys
 import os
 import csv
 
-# Agregar la carpeta actual al path para poder importar
+# Agregar la carpeta actual al path para poder importar .
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from connectors.sqlite_connector import SQLiteConnector
@@ -429,6 +429,7 @@ class REPL:
         else:
             rprint(f"[bold red]ERROR:[/bold red] [white]{error}[/white]")
 
+    
     def _execute_nosql_query(self, command: str):
         """Ejecuta una consulta NoSQL y muestra los resultados"""
         success, data, error = self.connector.execute_query(command)
