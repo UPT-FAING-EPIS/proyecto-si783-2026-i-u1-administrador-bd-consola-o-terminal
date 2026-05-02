@@ -12,6 +12,26 @@ from rich.text import Text
 
 def main():
     """Punto de entrada principal"""
+    import os
+    if os.name == 'nt':
+        import ctypes
+        import sys
+        
+        # Set Window Title
+        ctypes.windll.kernel32.SetConsoleTitleW("Database Administrator CLI")
+        
+        # Set Window Icon
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+        if hwnd:
+            hinst = ctypes.windll.kernel32.GetModuleHandleW(None)
+            exe_path = sys.executable
+            # Extract the first icon from the executable (0)
+            hicon = ctypes.windll.shell32.ExtractIconW(hinst, exe_path, 0)
+            if hicon:
+                # WM_SETICON = 0x0080
+                ctypes.windll.user32.SendMessageW(hwnd, 0x0080, 0, hicon) # ICON_SMALL
+                ctypes.windll.user32.SendMessageW(hwnd, 0x0080, 1, hicon) # ICON_BIG
+                
     console = Console()
     try:
         logo = r"""
