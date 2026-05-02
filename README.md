@@ -1,5 +1,11 @@
 # 🛡️ DBAdmin – Administrador de Bases de Datos por Consola
 
+---
+
+Página: https://muddy-star-877b.dbdadmincli.workers.dev
+
+---
+
 [![Python Version](https://img.shields.io/badge/Python-3.10-blue?logo=python)](https://python.org)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)](https://github.com/TU_ORG/dbadmin/actions)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
@@ -106,10 +112,6 @@ Para visualizar los diagramas, se recomienda usar [PlantUML](https://plantuml.co
 ## 🔐 Configuración
 
 El archivo `requirements.txt` incluye todas las dependencias necesarias para ejecutar el proyecto. Asegúrate de instalar las versiones especificadas para evitar problemas de compatibilidad.
-
----
-
-https://muddy-star-877b.dbdadmincli.workers.dev
 
 ---
 
