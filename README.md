@@ -109,6 +109,10 @@ El archivo `requirements.txt` incluye todas las dependencias necesarias para eje
 
 ---
 
+https://muddy-star-877b.dbdadmincli.workers.dev/
+
+---
+
 ## 👥 Equipo
 
 **Curso:** Base de Datos Avanzadas  
