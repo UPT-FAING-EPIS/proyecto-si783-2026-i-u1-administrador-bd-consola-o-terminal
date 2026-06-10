@@ -83,8 +83,16 @@ class REPL:
             self._status()
         elif cmd == "disconnect":
             self._disconnect()
+        elif cmd.startswith("export_db"):
+            self._export_db(command)
+        elif cmd.startswith("import_db"):
+            self._import_script(command)
+        elif cmd.startswith("export_sql"):
+            self._export_sql(command)
         elif cmd.startswith("export"):
             self._export(command)
+        elif cmd.startswith("import"):
+            self._import_script(command)
         else:
             if not self.connector or not self.connector.is_connected:
                 rprint("[bold red]ERROR:[/bold red] No hay conexión activa. [yellow]Usa 'connect' primero.[/yellow]")
@@ -168,7 +176,11 @@ class REPL:
         help_text.append("\nCOMUNES:\n", style="bold yellow")
         help_text.append("  status                                      - Ver estado de conexión\n")
         help_text.append("  disconnect                                  - Cerrar sesión activa\n")
+        help_text.append("  import <archivo.sql>                        - Importar y ejecutar script SQL/NoSQL\n")
+        help_text.append("  import_db <archivo.sql>                     - Importar un backup de BD completa\n")
         help_text.append("  export <archivo.csv>                        - Exportar últimos resultados a CSV\n")
+        help_text.append("  export_sql <tabla> <archivo.sql>            - Exportar tabla/colección a script\n")
+        help_text.append("  export_db <archivo.sql>                     - Exportar BD completa (esquema y datos)\n")
         help_text.append("  help                                        - Muestra esta ayuda\n")
         help_text.append("  exit                                        - Salir de la aplicación\n")
 
@@ -368,6 +380,457 @@ class REPL:
             rprint(f"[bold green]OK: Datos exportados correctamente a:[/bold green] [white]{filename}[/white]")
         except Exception as e:
             rprint(f"[bold red]ERROR al exportar:[/bold red] {e}")
+
+    def _import_script(self, command: str):
+        """Importa y ejecuta un archivo .sql o de script"""
+        if not self.connector or not self.connector.is_connected:
+            rprint("[bold red]ERROR:[/bold red] No hay conexión activa. [yellow]Conéctate a una BD antes de importar.[/yellow]")
+            return
+
+        parts = command.split()
+        if len(parts) < 2:
+            rprint("[bold red]ERROR:[/bold red] Debes especificar un archivo. [yellow]Ej: import script.sql[/yellow]")
+            return
+
+        filename = parts[1]
+        if not os.path.exists(filename):
+            rprint(f"[bold red]ERROR:[/bold red] El archivo '{filename}' no existe.")
+            return
+
+        rprint(f"[bold blue]Importando script desde:[/bold blue] [white]{filename}[/white]")
+        
+        try:
+            if self.mode == "rel":
+                db_type = self.connector.get_type().lower()
+                if "postgres" in db_type:
+                    import subprocess
+                    env = os.environ.copy()
+                    if hasattr(self.connector, 'password') and self.connector.password:
+                        env['PGPASSWORD'] = self.connector.password
+                    
+                    cmd = [
+                        "psql",
+                        "-h", self.connector.host,
+                        "-p", str(self.connector.port),
+                        "-U", self.connector.user,
+                        "-d", self.connector.dbname,
+                        "-f", filename
+                    ]
+                    rprint("[bold yellow]INFO:[/bold yellow] Ejecutando psql de sistema...")
+                    try:
+                        result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+                        if result.returncode == 0:
+                            rprint("[bold green]OK: Importación finalizada con psql.[/bold green]")
+                        else:
+                            rprint(f"[bold red]ERROR psql:[/bold red]\n{result.stderr}")
+                    except FileNotFoundError:
+                        rprint("[bold red]ERROR:[/bold red] Herramienta 'psql' no encontrada en el sistema.")
+                    return
+                
+                elif "mysql" in db_type:
+                    import subprocess
+                    cmd = [
+                        "mysql",
+                        "-h", self.connector.host,
+                        f"-P{self.connector.port}",
+                        f"-u{self.connector.user}",
+                        self.connector.database
+                    ]
+                    if hasattr(self.connector, 'password') and self.connector.password:
+                        cmd.append(f"-p{self.connector.password}")
+                        
+                    rprint("[bold yellow]INFO:[/bold yellow] Ejecutando mysql de sistema...")
+                    try:
+                        with open(filename, 'r', encoding='utf-8') as f:
+                            result = subprocess.run(cmd, stdin=f, capture_output=True, text=True)
+                        if result.returncode == 0:
+                            rprint("[bold green]OK: Importación finalizada con mysql.[/bold green]")
+                        else:
+                            rprint(f"[bold red]ERROR mysql:[/bold red]\n{result.stderr}")
+                    except FileNotFoundError:
+                        rprint("[bold red]ERROR:[/bold red] Herramienta 'mysql' no encontrada en el sistema.")
+                    return
+
+                # Fallback SQLite y otros
+                with open(filename, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                # Dividir por punto y coma y ejecutar cada instrucción
+                statements = [s.strip() for s in content.split(';') if s.strip()]
+                success_count = 0
+                for stmt in statements:
+                    success, _, error = self.connector.execute_query(stmt)
+                    if success:
+                        success_count += 1
+                    else:
+                        rprint(f"[bold red]ERROR en instrucción:[/bold red] {stmt[:50]}...\n[red]Detalle:[/red] {error}")
+                rprint(f"[bold green]OK: Importación finalizada. {success_count}/{len(statements)} instrucciones ejecutadas exitosamente.[/bold green]")
+            else:
+                # NoSQL: asumiendo una instrucción por línea
+                with open(filename, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                lines = [line.strip() for line in content.splitlines() if line.strip() and not line.strip().startswith('--') and not line.strip().startswith('//')]
+                success_count = 0
+                for line in lines:
+                    success, _, error = self.connector.execute_query(line)
+                    if success:
+                        success_count += 1
+                    else:
+                        rprint(f"[bold red]ERROR en comando:[/bold red] {line}\n[red]Detalle:[/red] {error}")
+                rprint(f"[bold green]OK: Importación finalizada. {success_count}/{len(lines)} comandos ejecutados exitosamente.[/bold green]")
+        except Exception as e:
+            rprint(f"[bold red]ERROR al importar script:[/bold red] {e}")
+
+    def _export_sql(self, command: str):
+        """Exporta los datos de una tabla/colección a un archivo .sql (o script)"""
+        if not self.connector or not self.connector.is_connected:
+            rprint("[bold red]ERROR:[/bold red] No hay conexión activa. [yellow]Conéctate a una BD antes de exportar.[/yellow]")
+            return
+
+        parts = command.split()
+        if len(parts) < 3:
+            rprint("[bold red]ERROR:[/bold red] Uso: export_sql <tabla_o_coleccion> <archivo.sql>")
+            return
+
+        table_name = parts[1]
+        filename = parts[2]
+
+        rprint(f"[bold blue]Exportando datos de '{table_name}' a '{filename}'...[/bold blue]")
+
+        try:
+            if self.mode == "rel":
+                success, data, error = self.connector.execute_query(f"SELECT * FROM {table_name}")
+                if not success:
+                    rprint(f"[bold red]ERROR al consultar tabla:[/bold red] {error}")
+                    return
+                
+                if not data or not data.get('rows'):
+                    rprint(f"[bold yellow]INFO:[/bold yellow] La tabla '{table_name}' está vacía o no existe.")
+                    return
+
+                columns = data['columns']
+                rows = data['rows']
+                
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f.write(f"-- Dump de la tabla {table_name}\n")
+                    for row in rows:
+                        formatted_values = []
+                        for val in row:
+                            if val is None:
+                                formatted_values.append("NULL")
+                            elif isinstance(val, (int, float)):
+                                formatted_values.append(str(val))
+                            else:
+                                safe_val = str(val).replace("'", "''")
+                                formatted_values.append(f"'{safe_val}'")
+                        
+                        cols_str = ", ".join(columns)
+                        vals_str = ", ".join(formatted_values)
+                        f.write(f"INSERT INTO {table_name} ({cols_str}) VALUES ({vals_str});\n")
+                rprint(f"[bold green]OK: {len(rows)} registros exportados a '{filename}'.[/bold green]")
+                
+            else:
+                db_type = self.connector.get_type().lower()
+                
+                if "mongodb" in db_type:
+                    success, data, error = self.connector.execute_query(f"find {table_name} {{}}")
+                    if not success:
+                        rprint(f"[bold red]ERROR al consultar colección:[/bold red] {error}")
+                        return
+                    
+                    if not data or not data.get('rows'):
+                        rprint(f"[bold yellow]INFO:[/bold yellow] La colección '{table_name}' está vacía.")
+                        return
+                    
+                    import json
+                    with open(filename, 'w', encoding='utf-8') as f:
+                        f.write(f"// Dump de la colección {table_name}\n")
+                        rows = data.get('rows', [])
+                        columns = data.get('columns', [])
+                        
+                        for row in rows:
+                            # Reconstruir el doc a partir de las columnas y la fila
+                            doc = {columns[i]: row[i] for i in range(len(columns)) if row[i] != ""}
+                            
+                            try:
+                                doc_str = json.dumps(doc, default=str)
+                            except:
+                                doc_str = str(doc)
+                            f.write(f"insert {table_name} {doc_str}\n")
+                            
+                    rprint(f"[bold green]OK: {len(rows)} documentos exportados a '{filename}'.[/bold green]")
+                
+                elif "redis" in db_type:
+                    rprint("[bold yellow]INFO:[/bold yellow] Exportando claves como backup.")
+                    success, keys_data, error = self.connector.execute_query(f"keys *")
+                    if not success:
+                        rprint(f"[bold red]ERROR:[/bold red] {error}")
+                        return
+                    
+                    keys = keys_data if isinstance(keys_data, list) else []
+                    with open(filename, 'w', encoding='utf-8') as f:
+                        f.write(f"// Dump de Redis\n")
+                        count = 0
+                        for key in keys:
+                            s, val, e = self.connector.execute_query(f"get {key}")
+                            if s and val is not None:
+                                f.write(f"set {key} {val}\n")
+                                count += 1
+                    rprint(f"[bold green]OK: {count} claves exportadas a '{filename}'.[/bold green]")
+                    
+                elif "cassandra" in db_type:
+                    success, data, error = self.connector.execute_query(f"SELECT * FROM {table_name}")
+                    if not success:
+                        rprint(f"[bold red]ERROR al consultar tabla:[/bold red] {error}")
+                        return
+                    
+                    if not data or not data.get('rows'):
+                        rprint(f"[bold yellow]INFO:[/bold yellow] La tabla '{table_name}' está vacía o no existe.")
+                        return
+
+                    columns = data['columns']
+                    rows = data['rows']
+                    
+                    with open(filename, 'w', encoding='utf-8') as f:
+                        f.write(f"-- Dump de la tabla {table_name} en Cassandra\n")
+                        for row in rows:
+                            formatted_values = []
+                            for val in row:
+                                if val is None:
+                                    formatted_values.append("NULL")
+                                elif isinstance(val, (int, float)):
+                                    formatted_values.append(str(val))
+                                else:
+                                    safe_val = str(val).replace("'", "''")
+                                    formatted_values.append(f"'{safe_val}'")
+                            
+                            cols_str = ", ".join(columns)
+                            vals_str = ", ".join(formatted_values)
+                            f.write(f"INSERT INTO {table_name} ({cols_str}) VALUES ({vals_str});\n")
+                    rprint(f"[bold green]OK: {len(rows)} registros exportados a '{filename}'.[/bold green]")
+
+        except Exception as e:
+            rprint(f"[bold red]ERROR al exportar a script:[/bold red] {e}")
+
+    def _export_db(self, command: str):
+        """Exporta la base de datos completa a un archivo .sql"""
+        if not self.connector or not self.connector.is_connected:
+            rprint("[bold red]ERROR:[/bold red] No hay conexión activa. [yellow]Conéctate a una BD antes de exportar.[/yellow]")
+            return
+
+        parts = command.split()
+        if len(parts) < 2:
+            rprint("[bold red]ERROR:[/bold red] Uso: export_db <archivo.sql>")
+            return
+            
+        filename = parts[1]
+        db_type = self.connector.get_type().lower()
+        rprint(f"[bold blue]Exportando BD completa a '{filename}'...[/bold blue]")
+        
+        try:
+            if self.mode == "rel":
+                if "sqlite" in db_type:
+                    # Usar iterdump
+                    with open(filename, 'w', encoding='utf-8') as f:
+                        for line in self.connector.connection.iterdump():
+                            f.write(f"{line}\n")
+                    rprint(f"[bold green]OK: Base de datos SQLite exportada a '{filename}'.[/bold green]")
+                
+                elif "postgres" in db_type:
+                    import subprocess
+                    env = os.environ.copy()
+                    if hasattr(self.connector, 'password') and self.connector.password:
+                        env['PGPASSWORD'] = self.connector.password
+                        
+                    cmd = [
+                        "pg_dump",
+                        "-h", self.connector.host,
+                        "-p", str(self.connector.port),
+                        "-U", self.connector.user,
+                        "-d", self.connector.dbname,
+                        "-f", filename
+                    ]
+                    rprint("[bold yellow]INFO:[/bold yellow] Usando pg_dump de sistema...")
+                    try:
+                        result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+                        if result.returncode == 0:
+                            rprint(f"[bold green]OK: Base de datos Postgres exportada a '{filename}'.[/bold green]")
+                        else:
+                            rprint(f"[bold red]ERROR pg_dump:[/bold red]\n{result.stderr}")
+                    except FileNotFoundError:
+                        rprint("[bold yellow]INFO:[/bold yellow] 'pg_dump' no encontrada. Intentando exportación básica en Python...")
+                        success, tables, err = self.connector.get_tables()
+                        if not success:
+                            rprint(f"[bold red]ERROR al obtener tablas:[/bold red] {err}")
+                            return
+                        
+                        with open(filename, 'w', encoding='utf-8') as f:
+                            f.write(f"-- Backup básico de PostgreSQL para {self.connector.dbname}\n")
+                            f.write(f"-- Generado por DBAdmin\n\n")
+                            
+                            for table in tables:
+                                rprint(f"   [blue]Exportando tabla:[/blue] [white]{table}...[/white]")
+                                # Escapamos el nombre de la tabla por seguridad
+                                quoted_table = f'"{table}"'
+                                
+                                s, data, err = self.connector.execute_query(f"SELECT * FROM {quoted_table}")
+                                if not s:
+                                    rprint(f"   [bold red]ERROR en tabla {table}:[/bold red] {err}")
+                                    f.write(f"-- ERROR al exportar tabla {table}: {err}\n")
+                                    continue
+                                    
+                                if data and data.get('rows'):
+                                    columns = data['columns']
+                                    quoted_cols = [f'"{c}"' for c in columns]
+                                    for row in data['rows']:
+                                        formatted_values = []
+                                        for val in row:
+                                            if val is None:
+                                                formatted_values.append("NULL")
+                                            elif isinstance(val, (int, float)):
+                                                formatted_values.append(str(val))
+                                            else:
+                                                safe_val = str(val).replace("'", "''")
+                                                formatted_values.append(f"'{safe_val}'")
+                                        cols_str = ", ".join(quoted_cols)
+                                        vals_str = ", ".join(formatted_values)
+                                        f.write(f"INSERT INTO {quoted_table} ({cols_str}) VALUES ({vals_str});\n")
+                                    rprint(f"   [green]OK:[/green] {len(data['rows'])} filas exportadas.")
+                                else:
+                                    rprint(f"   [yellow]Aviso:[/yellow] Tabla vacía.")
+                                    f.write(f"-- Tabla {table} sin datos\n")
+                                f.write("\n")
+                        rprint(f"[bold green]OK: Exportación básica completada a '{filename}'.[/bold green]")
+                        
+                elif "mysql" in db_type:
+                    import subprocess
+                    cmd = [
+                        "mysqldump",
+                        "-h", self.connector.host,
+                        f"-P{self.connector.port}",
+                        f"-u{self.connector.user}",
+                        self.connector.database,
+                        f"--result-file={filename}"
+                    ]
+                    if hasattr(self.connector, 'password') and self.connector.password:
+                        cmd.append(f"-p{self.connector.password}")
+                        
+                    rprint("[bold yellow]INFO:[/bold yellow] Usando mysqldump de sistema...")
+                    try:
+                        result = subprocess.run(cmd, capture_output=True, text=True)
+                        if result.returncode == 0:
+                            rprint(f"[bold green]OK: Base de datos MySQL exportada a '{filename}'.[/bold green]")
+                        else:
+                            rprint(f"[bold red]ERROR mysqldump:[/bold red]\n{result.stderr}")
+                    except FileNotFoundError:
+                        rprint("[bold yellow]INFO:[/bold yellow] 'mysqldump' no encontrada. Intentando exportación básica en Python...")
+                        success, tables, err = self.connector.get_tables()
+                        if not success:
+                            rprint(f"[bold red]ERROR al obtener tablas:[/bold red] {err}")
+                            return
+                            
+                        with open(filename, 'w', encoding='utf-8') as f:
+                            f.write(f"-- Backup básico de MySQL para {self.connector.database}\n")
+                            f.write(f"-- Generado por DBAdmin\n\n")
+                            f.write("SET FOREIGN_KEY_CHECKS = 0;\n\n")
+                            
+                            for table in tables:
+                                rprint(f"   [blue]Exportando tabla:[/blue] [white]{table}...[/white]")
+                                quoted_table = f"`{table}`"
+                                
+                                # Intentar obtener el CREATE TABLE
+                                s, crt_data, err = self.connector.execute_query(f"SHOW CREATE TABLE {quoted_table}")
+                                if s and crt_data and crt_data.get('rows'):
+                                    f.write(f"DROP TABLE IF EXISTS {quoted_table};\n")
+                                    f.write(f"{crt_data['rows'][0][1]};\n\n")
+                                
+                                # Exportar datos
+                                s, data, err = self.connector.execute_query(f"SELECT * FROM {quoted_table}")
+                                if not s:
+                                    rprint(f"   [bold red]ERROR en tabla {table}:[/bold red] {err}")
+                                    continue
+                                    
+                                if data and data.get('rows'):
+                                    columns = data['columns']
+                                    quoted_cols = [f"`{c}`" for c in columns]
+                                    for row in data['rows']:
+                                        formatted_values = []
+                                        for val in row:
+                                            if val is None:
+                                                formatted_values.append("NULL")
+                                            elif isinstance(val, (int, float)):
+                                                formatted_values.append(str(val))
+                                            else:
+                                                safe_val = str(val).replace("'", "''").replace("\\", "\\\\")
+                                                formatted_values.append(f"'{safe_val}'")
+                                        cols_str = ", ".join(quoted_cols)
+                                        vals_str = ", ".join(formatted_values)
+                                        f.write(f"INSERT INTO {quoted_table} ({cols_str}) VALUES ({vals_str});\n")
+                                    rprint(f"   [green]OK:[/green] {len(data['rows'])} filas exportadas.")
+                                else:
+                                    rprint(f"   [yellow]Aviso:[/yellow] Tabla vacía.")
+                                f.write("\n")
+                            f.write("SET FOREIGN_KEY_CHECKS = 1;\n")
+                        rprint(f"[bold green]OK: Exportación básica completada a '{filename}'.[/bold green]")
+                        
+            else:
+                # NoSQL: exportar todas las colecciones/claves
+                success, collections, err = self.connector.get_tables()
+                if not success:
+                    rprint(f"[bold red]ERROR al obtener colecciones:[/bold red] {err}")
+                    return
+                
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f.write(f"// Backup completo de {db_type}\n")
+                    
+                    for coll in collections:
+                        f.write(f"\n// Colección/Tabla: {coll}\n")
+                        if "mongodb" in db_type:
+                            s, data, e = self.connector.execute_query(f"find {coll} {{}}")
+                            if s and data and data.get('rows'):
+                                import json
+                                rows = data.get('rows', [])
+                                columns = data.get('columns', [])
+                                for row in rows:
+                                    doc = {columns[i]: row[i] for i in range(len(columns)) if row[i] != ""}
+                                    try:
+                                        doc_str = json.dumps(doc, default=str)
+                                    except:
+                                        doc_str = str(doc)
+                                    f.write(f"insert {coll} {doc_str}\n")
+                                    
+                        elif "cassandra" in db_type:
+                            s, data, e = self.connector.execute_query(f"SELECT * FROM {coll}")
+                            if s and data and data.get('rows'):
+                                columns = data['columns']
+                                for row in data['rows']:
+                                    formatted_values = []
+                                    for val in row:
+                                        if val is None:
+                                            formatted_values.append("NULL")
+                                        elif isinstance(val, (int, float)):
+                                            formatted_values.append(str(val))
+                                        else:
+                                            safe_val = str(val).replace("'", "''")
+                                            formatted_values.append(f"'{safe_val}'")
+                                    
+                                    cols_str = ", ".join(columns)
+                                    vals_str = ", ".join(formatted_values)
+                                    f.write(f"INSERT INTO {coll} ({cols_str}) VALUES ({vals_str});\n")
+                                    
+                    if "redis" in db_type:
+                        f.write("\n// Backup Redis\n")
+                        s, keys_data, e = self.connector.execute_query("keys *")
+                        if s:
+                            keys = keys_data if isinstance(keys_data, list) else []
+                            for key in keys:
+                                ss, val, ee = self.connector.execute_query(f"get {key}")
+                                if ss and val is not None:
+                                    f.write(f"set {key} {val}\n")
+                                    
+                rprint(f"[bold green]OK: Base de datos NoSQL exportada a '{filename}'.[/bold green]")
+                
+        except Exception as e:
+            rprint(f"[bold red]ERROR al exportar BD:[/bold red] {e}")
 
     def _insert(self, command: str):
         """Ejecutar INSERT"""

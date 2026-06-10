@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DBAdmin CLI - Herramienta de Gestión de Bases de Datos</title>
+    <style>
+        :root {
+            --bg-color: #0a0e14;
+            --text-color: #c9d1d9;
+            --accent-color: #58a6ff;
+            --accent-green: #7ee787;
+            --accent-purple: #d2a8ff;
+            --accent-red: #ff7b72;
+            --terminal-bg: #0d1117;
+            --terminal-border: #21262d;
+            --card-bg: #161b22;
+            --btn-bg: #238636;
+            --btn-hover: #2ea043;
+            --btn-glow: rgba(35, 134, 54, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 20px var(--btn-glow); }
+            50% { box-shadow: 0 8px 35px rgba(46, 160, 67, 0.7); }
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blinkCursor {
+            0%, 100% { border-right-color: var(--accent-green); }
+            50% { border-right-color: transparent; }
+        }
+
+        @keyframes glowLine {
+            0%, 100% { border-color: var(--terminal-border); }
+            50% { border-color: var(--accent-color); }
+        }
+
+        .hero {
+            text-align: center;
+            padding: 60px 20px 50px 20px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .hero .subtitle {
+            font-size: 1.3em;
+            color: #8b949e;
+            margin-bottom: 35px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(180deg, #2ea043, #238636);
+            color: white;
+            text-decoration: none;
+            padding: 16px 36px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            animation: pulse 2.5s infinite;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            animation: none;
+            box-shadow: 0 8px 30px rgba(46, 160, 67, 0.6);
+            background: linear-gradient(180deg, #3fb950, #2ea043);
+        }
+
+        .btn-download .icon {
+            font-size: 1.4em;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid var(--terminal-border);
+            margin: 30px 0;
+            animation: glowLine 4s infinite;
+        }
+
+        h2 {
+            font-size: 2em;
+            color: var(--accent-color);
+            margin: 50px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--terminal-border);
+        }
+
+        h3 {
+            font-size: 1.5em;
+            color: var(--accent-green);
+            margin: 40px 0 15px 0;
+        }
+
+        h4 {
+            font-size: 1.2em;
+            color: var(--accent-purple);
+            margin: 30px 0 10px 0;
+        }
+
+        p {
+            color: #b1bac4;
+            margin-bottom: 15px;
+        }
+
+        .terminal-block {
+            background-color: var(--terminal-bg);
+            border: 1px solid var(--terminal-border);
+            border-radius: 10px;
+            padding: 25px;
+            font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
+            overflow-x: auto;
+            color: #e6edf3;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            line-height: 2;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .terminal-block::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+            opacity: 0.5;
+        }
+
+        .terminal-block:hover {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 25px rgba(88, 166, 255, 0.1), 0 4px 15px rgba(0,0,0,0.4);
+            transform: translateY(-1px);
+        }
+
+        .comment {
+            color: #8b949e;
+            font-style: italic;
+        }
+
+        .prompt {
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+
+        .cmd {
+            color: var(--accent-purple);
+            font-weight: 600;
+        }
+
+        .value {
+            color: #a5d6ff;
+        }
+
+        .keyword {
+            color: var(--accent-red);
+        }
+
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            padding: 30px 0;
+            border-top: 1px solid var(--terminal-border);
+            color: #484f58;
+            font-size: 0.9em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2em;
+            }
+            .terminal-block {
+                font-size: 0.8em;
+                padding: 15px;
+            }
+            body {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <h1>DBAdmin CLI</h1>
+        <p class="subtitle">
+            Consola unificada para gestionar bases de datos relacionales y NoSQL.
+            Rápida, portable y profesional.
+        </p>
+        <a href="DBAdmin.exe" class="btn-download">
+            <span class="icon">⬇</span> Descargar DBAdmin.exe
+        </a>
+    </div>
+
+    <hr class="divider">
+
+    <h2>📖 Manual de Uso</h2>
+    <p>Al iniciar <code>DBAdmin.exe</code>, un menú te permite elegir el modo de trabajo:</p>
+    <p>
+        <code style="background:#1a2332;padding:4px 10px;">[1] Modo Relacional</code> &nbsp;
+        <code style="background:#1a2332;padding:4px 10px;">[2] Modo NoSQL</code>
+    </p>
+    <p>El prompt cambia a <code>dbcli-rel &gt;</code> o <code>dbcli-nosql &gt;</code> según corresponda.</p>
+
+    <!-- ==================== RELACIONAL ==================== -->
+    <h3>🗄️ Modo Relacional</h3>
+    <p>Soporta <strong>SQLite</strong>, <strong>PostgreSQL</strong> y <strong>MySQL</strong>.</p>
+
+    <h4>🔌 Conexiones</h4>
+    <div class="terminal-block">
+<span class="comment"># Conexión a SQLite (archivo local)</span><br>
+<span class="prompt">dbcli-rel &gt;</span> <span class="cmd">connect sqlite</span> <span class="value">test.db</span><br>
+<br>
+<span class="comment"># Conexión a PostgreSQL</span><br>
+<span class="prompt">dbcli-rel &gt;</span> <span class="cmd">connect postgres</span> <span class="value">mi_db usuario pass localhost 5432</span><br>
+<br>
+<span class="comment"># Conexión a MySQL</span><br>
+<span class="prompt">dbcli-rel &gt;</span> <span class="cmd">connect mysql</span> <span class="value">mi_db usuario pass localhost 3306</span><br>
+    </div>
+
+    <h4>📊 Consultas CRUD</h4>
+    <div class="terminal-block">
+<span class="comment"># Seleccionar registros</span><br>
+<span class="prompt">dbcli-rel [sqlite: test.db] &gt;</span> <span class="keyword">select</span> * <span class="keyword">from</span> usuarios <span class="keyword">where</span> edad &gt; 18<br>
+<br>
+<span class="comment"># Insertar un nuevo registro</span><br>
+<span class="prompt">dbcli-rel [sqlite: test.db] &gt;</span> <span class="keyword">insert into</span> usuarios (nombre, edad) <span class="keyword">values</span> (<span class="value">'Ana'</span>, <span class="value">30</span>)<br>
+<br>
+<span class="comment"># Actualizar registros</span><br>
+<span class="prompt">dbcli-rel [sqlite: test.db] &gt;</span> <span class="keyword">update</span> usuarios <span class="keyword">set</span> edad = <span class="value">31</span> <span class="keyword">where</span> nombre = <span class="value">'Ana'</span><br>
+<br>
+<span class="comment"># Eliminar registros</span><br>
+<span class="prompt">dbcli-rel [sqlite: test.db] &gt;</span> <span class="keyword">delete from</span> usuarios <span class="keyword">where</span> nombre = <span class="value">'Ana'</span><br>
+    </div>
+
+    <h4>🏗️ Estructura (DDL)</h4>
+    <div class="terminal-block">
+<span class="comment"># Crear tabla</span><br>
+<span class="prompt">dbcli-rel [sqlite: test.db] &gt;</span> <span class="keyword">create table</span> clientes (id <span class="keyword">int</span>, nombre <span class="keyword">text</span>)<br>
+<br>
+<span class="comment"># Eliminar tabla</span><br>
+<span class="prompt">dbcli-rel [sqlite: test.db] &gt;</span> <span class="keyword">drop table</span> clientes<br>
+<br>
+<span class="comment"># Listar todas las tablas</span><br>
+<span class="prompt">dbcli-rel [sqlite: test.db] &gt;</span> <span class="cmd">show tables</span><br>
+    </div>
+
+    <h4>🛠️ Utilidades</h4>
+    <div class="terminal-block">
+<span class="comment"># Exportar último SELECT a CSV</span><br>
+<span class="prompt">dbcli-rel [sqlite: test.db] &gt;</span> <span class="cmd">export</span> <span class="value">reporte.csv</span><br>
+<br>
+<span class="comment"># Ver estado de la conexión</span><br>
+<span class="prompt">dbcli-rel [sqlite: test.db] &gt;</span> <span class="cmd">status</span><br>
+<br>
+<span class="comment"># Cerrar conexión actual</span><br>
+<span class="prompt">dbcli-rel [sqlite: test.db] &gt;</span> <span class="cmd">disconnect</span><br>
+<br>
+<span class="comment"># Salir de la aplicación</span><br>
+<span class="prompt">dbcli-rel [sqlite: test.db] &gt;</span> <span class="cmd">exit</span><br>
+    </div>
+
+    <!-- ==================== NOSQL ==================== -->
+    <h3>🧩 Modo NoSQL</h3>
+    <p>Soporta <strong>MongoDB</strong>, <strong>Redis</strong> y <strong>Cassandra</strong>.</p>
+
+    <!-- MongoDB -->
+    <h4>🍃 MongoDB (Documentos)</h4>
+    <div class="terminal-block">
+<span class="comment"># Conexión a MongoDB</span><br>
+<span class="prompt">dbcli-nosql &gt;</span> <span class="cmd">connect mongodb</span> <span class="value">mi_base localhost 27017</span><br>
+<br>
+<span class="comment"># Insertar un documento (formato JSON simplificado)</span><br>
+<span class="prompt">dbcli-nosql [mongodb: mi_base] &gt;</span> <span class="keyword">insert</span> usuarios {<span class="value">"nombre"</span>: <span class="value">"Carlos"</span>, <span class="value">"rol"</span>: <span class="value">"admin"</span>}<br>
+<br>
+<span class="comment"># Buscar documentos</span><br>
+<span class="prompt">dbcli-nosql [mongodb: mi_base] &gt;</span> <span class="keyword">find</span> usuarios {<span class="value">"rol"</span>: <span class="value">"admin"</span>}<br>
+<br>
+<span class="comment"># Actualizar documentos</span><br>
+<span class="prompt">dbcli-nosql [mongodb: mi_base] &gt;</span> <span class="keyword">update</span> usuarios {<span class="value">"nombre"</span>: <span class="value">"Carlos"</span>} {<span class="value">"rol"</span>: <span class="value">"superadmin"</span>}<br>
+<br>
+<span class="comment"># Eliminar documentos</span><br>
+<span class="prompt">dbcli-nosql [mongodb: mi_base] &gt;</span> <span class="keyword">delete</span> usuarios {<span class="value">"nombre"</span>: <span class="value">"Carlos"</span>}<br>
+<br>
+<span class="comment"># Listar colecciones</span><br>
+<span class="prompt">dbcli-nosql [mongodb: mi_base] &gt;</span> <span class="cmd">show collections</span><br>
+    </div>
+
+    <!-- Redis -->
+    <h4>🔴 Redis (Clave-Valor)</h4>
+    <div class="terminal-block">
+<span class="comment"># Conexión a Redis (base de datos 0)</span><br>
+<span class="prompt">dbcli-nosql &gt;</span> <span class="cmd">connect redis</span> <span class="value">0 localhost 6379</span><br>
+<br>
+<span class="comment"># Establecer una clave</span><br>
+<span class="prompt">dbcli-nosql [redis: DB:0] &gt;</span> <span class="keyword">set</span> mensaje <span class="value">"Hola Mundo"</span><br>
+<br>
+<span class="comment"># Obtener una clave</span><br>
+<span class="prompt">dbcli-nosql [redis: DB:0] &gt;</span> <span class="keyword">get</span> mensaje<br>
+<br>
+<span class="comment"># Listar todas las claves</span><br>
+<span class="prompt">dbcli-nosql [redis: DB:0] &gt;</span> <span class="keyword">keys</span> *<br>
+<br>
+<span class="comment"># Eliminar una clave</span><br>
+<span class="prompt">dbcli-nosql [redis: DB:0] &gt;</span> <span class="keyword">del</span> mensaje<br>
+    </div>
+
+    <!-- Cassandra -->
+    <h4>🔵 Cassandra (Columnas / CQL)</h4>
+    <div class="terminal-block">
+<span class="comment"># Conexión a Cassandra</span><br>
+<span class="prompt">dbcli-nosql &gt;</span> <span class="cmd">connect cassandra</span> <span class="value">mi_keyspace localhost</span><br>
+<br>
+<span class="comment"># Consultar registros</span><br>
+<span class="prompt">dbcli-nosql [cassandra: KS:mi_keyspace] &gt;</span> <span class="keyword">select</span> * <span class="keyword">from</span> registros<br>
+<br>
+<span class="comment"># Insertar un registro</span><br>
+<span class="prompt">dbcli-nosql [cassandra: KS:mi_keyspace] &gt;</span> <span class="keyword">insert into</span> registros (id, valor) <span class="keyword">values</span> (<span class="value">1</span>, <span class="value">'dato'</span>)<br>
+<br>
+<span class="comment"># Listar tablas del keyspace</span><br>
+<span class="prompt">dbcli-nosql [cassandra: KS:mi_keyspace] &gt;</span> <span class="cmd">show tables</span><br>
+    </div>
+
+    <div class="footer">
+        <p>DBAdmin CLI — v1.0 — Herramienta profesional para administradores de bases de datos.</p>
+    </div>
+
+</body>
+</html>

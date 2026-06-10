@@ -59,18 +59,20 @@ class SQLiteConnector(BaseConnector):
         try:
             self.cursor.execute(sql)
             
-            # Si es SELECT, obtener resultados
-            if sql.strip().upper().startswith('SELECT'):
+            # Si la consulta devuelve filas
+            if self.cursor.description:
                 rows = self.cursor.fetchall()
-                columns = [desc[0] for desc in self.cursor.description] if self.cursor.description else []
+                columns = [desc[0] for desc in self.cursor.description]
                 return True, {'columns': columns, 'rows': rows}, ""
             else:
-                # INSERT, UPDATE, DELETE, CREATE, DROP
+                # Comandos que no devuelven filas
                 self.connection.commit()
                 affected = self.cursor.rowcount
                 return True, {'affected_rows': affected}, ""
                 
         except sqlite3.Error as e:
+            if self.connection:
+                self.connection.rollback()
             return False, None, str(e)
 
     def get_tables(self) -> Tuple[bool, List[str], str]:

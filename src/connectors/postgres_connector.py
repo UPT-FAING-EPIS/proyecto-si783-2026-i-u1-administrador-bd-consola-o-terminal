@@ -46,6 +46,7 @@ class PostgresConnector(BaseConnector):
             self.cursor = self.connection.cursor()
             self.is_connected = True
             self.user = user
+            self.password = password
             return True
         except Error as e:
             raise Exception(f"Error conectando a PostgreSQL: {e}")
@@ -75,18 +76,21 @@ class PostgresConnector(BaseConnector):
         try:
             self.cursor.execute(sql)
             
-            # Si es SELECT, obtener resultados
-            if sql.strip().upper().startswith('SELECT'):
+            # Si la consulta devuelve filas (como SELECT, SHOW, etc.)
+            if self.cursor.description:
                 rows = self.cursor.fetchall()
-                columns = [desc[0] for desc in self.cursor.description] if self.cursor.description else []
+                columns = [desc[0] for desc in self.cursor.description]
                 return True, {'columns': columns, 'rows': rows}, ""
             else:
-                # INSERT, UPDATE, DELETE, CREATE, DROP
+                # Comandos que no devuelven filas (INSERT, UPDATE, DELETE, etc.)
                 self.connection.commit()
                 affected = self.cursor.rowcount
                 return True, {'affected_rows': affected}, ""
                 
         except Error as e:
+            # En caso de error, intentamos hacer rollback para no dejar la transacción colgada
+            if self.connection:
+                self.connection.rollback()
             return False, None, str(e)
 
     def get_tables(self) -> Tuple[bool, List[str], str]:
