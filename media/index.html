@@ -36,7 +36,6 @@
             padding: 20px;
         }
 
-        /* Animaciones */
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -51,16 +50,6 @@
         @keyframes pulse {
             0%, 100% { box-shadow: 0 4px 20px var(--btn-glow); }
             50% { box-shadow: 0 8px 35px rgba(46, 160, 67, 0.7); }
-        }
-
-        @keyframes typing {
-            from { width: 0; }
-            to { width: 100%; }
-        }
-
-        @keyframes blinkCursor {
-            0%, 100% { border-right-color: var(--accent-green); }
-            50% { border-right-color: transparent; }
         }
 
         @keyframes glowLine {
@@ -107,6 +96,7 @@
             transition: all 0.3s ease;
             animation: pulse 2.5s infinite;
             border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
         }
 
         .btn-download:hover {
@@ -118,6 +108,33 @@
 
         .btn-download .icon {
             font-size: 1.4em;
+        }
+
+        .counter-box {
+            margin-top: 25px;
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #1a2332, #0d1117);
+            border: 1px solid var(--terminal-border);
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .counter-box span:first-child {
+            font-size: 1.5em;
+        }
+
+        .counter-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--accent-green);
+            font-family: monospace;
+        }
+
+        .counter-label {
+            color: #8b949e;
+            font-size: 0.9em;
         }
 
         .divider {
@@ -217,7 +234,6 @@
             font-size: 0.9em;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .hero h1 {
                 font-size: 2em;
@@ -240,9 +256,16 @@
             Consola unificada para gestionar bases de datos relacionales y NoSQL.
             Rápida, portable y profesional.
         </p>
-        <a href="DBAdmin.exe" class="btn-download">
+        
+        <button class="btn-download" id="downloadBtn">
             <span class="icon">⬇</span> Descargar DBAdmin.exe
-        </a>
+        </button>
+
+        <div class="counter-box">
+            <span>📥</span>
+            <span class="counter-number" id="downloadCount">0</span>
+            <span class="counter-label">descargas totales</span>
+        </div>
     </div>
 
     <hr class="divider">
@@ -317,7 +340,6 @@
     <h3>🧩 Modo NoSQL</h3>
     <p>Soporta <strong>MongoDB</strong>, <strong>Redis</strong> y <strong>Cassandra</strong>.</p>
 
-    <!-- MongoDB -->
     <h4>🍃 MongoDB (Documentos)</h4>
     <div class="terminal-block">
 <span class="comment"># Conexión a MongoDB</span><br>
@@ -339,7 +361,6 @@
 <span class="prompt">dbcli-nosql [mongodb: mi_base] &gt;</span> <span class="cmd">show collections</span><br>
     </div>
 
-    <!-- Redis -->
     <h4>🔴 Redis (Clave-Valor)</h4>
     <div class="terminal-block">
 <span class="comment"># Conexión a Redis (base de datos 0)</span><br>
@@ -358,7 +379,6 @@
 <span class="prompt">dbcli-nosql [redis: DB:0] &gt;</span> <span class="keyword">del</span> mensaje<br>
     </div>
 
-    <!-- Cassandra -->
     <h4>🔵 Cassandra (Columnas / CQL)</h4>
     <div class="terminal-block">
 <span class="comment"># Conexión a Cassandra</span><br>
@@ -378,5 +398,72 @@
         <p>DBAdmin CLI — v1.0 — Herramienta profesional para administradores de bases de datos.</p>
     </div>
 
+    <script>
+        // ID único para este contador
+        const COUNTER_ID = 'dbadmin-downloads';
+        
+        // Función para mostrar el contador actual
+        async function loadCount() {
+            try {
+                const response = await fetch(`https://api.countapi.xyz/get/${COUNTER_ID}`);
+                const data = await response.json();
+                document.getElementById('downloadCount').innerText = data.value;
+            } catch (error) {
+                document.getElementById('downloadCount').innerText = '?';
+            }
+        }
+        
+        // Función para incrementar y descargar
+        async function handleDownload() {
+            const btn = document.getElementById('downloadBtn');
+            const originalHTML = btn.innerHTML;
+            
+            // Cambiar botón a "procesando"
+            btn.innerHTML = '<span class="icon">⏳</span> Procesando...';
+            btn.style.opacity = '0.7';
+            btn.style.animation = 'none';
+            
+            try {
+                // Incrementar contador
+                await fetch(`https://api.countapi.xyz/hit/${COUNTER_ID}`);
+                
+                // Cargar nuevo número
+                const response = await fetch(`https://api.countapi.xyz/get/${COUNTER_ID}`);
+                const data = await response.json();
+                document.getElementById('downloadCount').innerText = data.value;
+                
+                // Descargar el archivo
+                const link = document.createElement('a');
+                link.href = 'DBAdmin.exe';
+                link.download = 'DBAdmin.exe';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                // Si falla el contador, igual descargar
+                const link = document.createElement('a');
+                link.href = 'DBAdmin.exe';
+                link.download = 'DBAdmin.exe';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            // Restaurar botón
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.opacity = '1';
+                btn.style.animation = 'pulse 2.5s infinite';
+            }, 1000);
+        }
+        
+        // Asignar evento al botón
+        document.getElementById('downloadBtn').addEventListener('click', handleDownload);
+        
+        // Cargar contador al iniciar
+        loadCount();
+    </script>
 </body>
 </html>

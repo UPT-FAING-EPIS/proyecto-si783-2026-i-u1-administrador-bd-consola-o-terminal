@@ -1,5 +1,5 @@
-('D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
- 'termninal\\build\\DBAdmin\\PYZ-00.pyz',
+('C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+ 'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\build\\DBAdmin\\PYZ-00.pyz',
  [('__future__',
    'C:\\Users\\LENOVO\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\__future__.py',
    'PYMODULE'),
@@ -358,12 +358,12 @@
    'C:\\Users\\LENOVO\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\cassandra\\type_codes.py',
    'PYMODULE'),
   ('cli',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\cli\\__init__.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\cli\\__init__.py',
    'PYMODULE'),
   ('cli.repl',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\cli\\repl.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\cli\\repl.py',
    'PYMODULE'),
   ('colorsys',
    'C:\\Users\\LENOVO\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\colorsys.py',
@@ -387,40 +387,40 @@
    'C:\\Users\\LENOVO\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\configparser.py',
    'PYMODULE'),
   ('connectors',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\connectors\\__init__.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\connectors\\__init__.py',
    'PYMODULE'),
   ('connectors.base',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\connectors\\base.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\connectors\\base.py',
    'PYMODULE'),
   ('connectors.cassandra_connector',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\connectors\\cassandra_connector.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\connectors\\cassandra_connector.py',
    'PYMODULE'),
   ('connectors.mongodb_connector',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\connectors\\mongodb_connector.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\connectors\\mongodb_connector.py',
    'PYMODULE'),
   ('connectors.mysql_connector',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\connectors\\mysql_connector.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\connectors\\mysql_connector.py',
    'PYMODULE'),
   ('connectors.nosql_base',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\connectors\\nosql_base.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\connectors\\nosql_base.py',
    'PYMODULE'),
   ('connectors.postgres_connector',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\connectors\\postgres_connector.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\connectors\\postgres_connector.py',
    'PYMODULE'),
   ('connectors.redis_connector',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\connectors\\redis_connector.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\connectors\\redis_connector.py',
    'PYMODULE'),
   ('connectors.sqlite_connector',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\connectors\\sqlite_connector.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\connectors\\sqlite_connector.py',
    'PYMODULE'),
   ('contextlib',
    'C:\\Users\\LENOVO\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\contextlib.py',
@@ -936,12 +936,12 @@
    'C:\\Users\\LENOVO\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\fnmatch.py',
    'PYMODULE'),
   ('formatters',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\formatters\\__init__.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\formatters\\__init__.py',
    'PYMODULE'),
   ('formatters.table_formatter',
-   'D:\\1_PROYECTOS\\v2Administrador de BD por consola o '
-   'termninal\\formatters\\table_formatter.py',
+   'C:\\Users\\LENOVO\\OneDrive\\Documentos\\BD - '
+   'PROYECTO\\proyecto-si783-2026-i-u1-administrador-bd-consola-o-terminal\\src\\formatters\\table_formatter.py',
    'PYMODULE'),
   ('fractions',
    'C:\\Users\\LENOVO\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\fractions.py',

@@ -6,6 +6,7 @@ Bucle principal que lee comandos y los ejecuta
 import sys
 import os
 import csv
+import shlex
 
 # Agregar la carpeta actual al path para poder importar
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,6 +18,8 @@ from connectors.mongodb_connector import MongoDBConnector
 from connectors.redis_connector import RedisConnector
 from connectors.cassandra_connector import CassandraConnector
 from formatters.table_formatter import TableFormatter
+# Importación del nuevo conector para el proyecto de Iker
+from connectors.safebridge_client import SafeBridgeClient
 
 from rich.console import Console
 from rich.panel import Panel
@@ -77,6 +80,8 @@ class REPL:
             self._exit()
         elif cmd == "help":
             self._help()
+        elif cmd.startswith("validate backup"): # Captura el comando de validación externa
+            self._handle_safebridge_validation(command)
         elif cmd.startswith("connect"):
             self._connect(command)
         elif cmd == "status":
@@ -915,3 +920,49 @@ class REPL:
                 rprint("[bold green]OK: Comando ejecutado correctamente sin devolver datos.[/bold green]")
         else:
             rprint(f"[bold red]ERROR NOSQL:[/bold red] [white]{error}[/white]")
+    
+    def _handle_safebridge_validation(self, command: str):
+        """Maneja el comando de validación externa de la API de Iker"""
+        parts = shlex.split(command)
+        # Sintaxis esperada: validate backup <ruta> <motor> <nombre_bd>
+        if len(parts) < 5:
+            rprint("[bold red]❌ Sintaxis incorrecta.[/bold red] Uso: `validate backup <ruta_archivo> <motor> <nombre_base_datos>`")
+            rprint("Ejemplo: [dim]validate backup /backups/data.sql postgres tienda_db[/dim]")
+            return
+
+        path_backup = parts[2]
+        engine_type = parts[3]
+        db_name = parts[4]
+
+        client = SafeBridgeClient()
+        success, result = client.validar_backup(path_backup, engine_type, db_name)
+
+        if success:
+            tables_validated = int(result.get("tables_validated", 0) or 0)
+            warnings = result.get("warnings", []) or []
+            critical_errors = result.get("critical_errors", []) or []
+            integrity_valid = bool(result.get("integrity_valid")) and tables_validated > 0 and not critical_errors
+
+            rprint("\n[bold green]📊 REPORTE DE INTEGRIDAD EN DOCKER SANDBOX (SafeBridge API)[/bold green]")
+            
+            headers = ["Criterio de Validación", "Resultado / Valor"]
+            estado_int = "[bold green]✔️ PASA CONTROL (VÁLIDO)[/bold green]" if integrity_valid else "[bold red]❌ FALLIDO (DAÑADO)[/bold red]"
+            
+            rows = [
+                ["Estado de Integridad", estado_int],
+                ["Tablas Restauradas y Validadas", str(tables_validated)],
+                ["Tiempo de Ejecución Docker", f"{result.get('execution_time_seconds', 0)} seg"],
+                ["Alertas detectadas", str(len(warnings))],
+                ["Errores Críticos", str(len(critical_errors))]
+            ]
+            self.formatter.print_table(headers, rows)
+            
+            if warnings:
+                rprint(f"[bold yellow]⚠️ Advertencias:[/bold yellow] {warnings}")
+            if critical_errors:
+                rprint(f"[bold red]🚨 Errores Críticos del Sandbox:[/bold red] {critical_errors}")
+            elif tables_validated == 0 and warnings:
+                rprint("[bold red]🚨 La validación no restauró tablas, aunque el sandbox la marcó como válida.[/bold red]")
+                rprint("[yellow]Revisa el backend SafeBridge: el warning indica que MySQL intentó usar el socket local en vez de una conexión de contenedor.[/yellow]")
+        else:
+            rprint(f"[bold red]❌ Error en la Validación Externa:[/bold red] {result}")
