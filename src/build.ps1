@@ -1,5 +1,5 @@
 # Build script for DBAdmin CLI
-$AppName = "DBAdmin"
+$AppName = "DB-CLI"
 $MainScript = "main.py"
 $IconPath = "assets\icon.ico"
 
@@ -28,7 +28,10 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "`nBuild completed successfully!" -ForegroundColor Green
     Write-Host "Copying the definitive executable to the main folder..." -ForegroundColor Yellow
     Copy-Item "dist\$AppName.exe" -Destination ".\$AppName.exe" -Force
-    Write-Host "Done! DBAdmin.exe is ready and linked properly to your HTML landing page." -ForegroundColor Green
+    if (Test-Path "..\media") {
+        Copy-Item "dist\$AppName.exe" -Destination "..\media\$AppName.exe" -Force
+    }
+    Write-Host "Done! DB-CLI.exe is ready and linked properly to your HTML landing page." -ForegroundColor Green
 } else {
     Write-Host "`nBuild failed with exit code $LASTEXITCODE" -ForegroundColor Red
     Write-Host "Asegúrate de haber instalado pyinstaller (pip install pyinstaller)" -ForegroundColor Yellow

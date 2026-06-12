@@ -5,6 +5,21 @@ Aplicación CLI para administración de bases de datos relacionales
 """
 
 import sys
+import os
+
+# Forzar UTF-8 en Windows para soportar caracteres especiales y emojis
+if sys.platform == 'win32':
+    os.environ.setdefault('PYTHONUTF8', '1')
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
+    try:
+        os.system('chcp 65001 > nul 2>&1')
+    except Exception:
+        pass
+
 from cli.repl import REPL
 from rich.console import Console
 from rich.panel import Panel

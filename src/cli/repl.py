@@ -21,6 +21,12 @@ from formatters.table_formatter import TableFormatter
 # Importación del nuevo conector para el proyecto de Iker
 from connectors.safebridge_client import SafeBridgeClient
 
+# Importación del motor ETL de Jimmy (Migrador)
+from utilidades.detector import DetectorBaseDatos
+from extraccion.conector import ConectorOrigen
+from transformacion.mapeador import MapeadorDatos
+from carga.cargador import CargadorDestino
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
@@ -82,6 +88,8 @@ class REPL:
             self._help()
         elif cmd.startswith("validate backup"): # Captura el comando de validación externa
             self._handle_safebridge_validation(command)
+        elif cmd.startswith("migrate"): # Captura el comando de migración ETL de Jimmy
+            self._migrate(command)
         elif cmd.startswith("connect"):
             self._connect(command)
         elif cmd == "status":
@@ -186,6 +194,8 @@ class REPL:
         help_text.append("  export <archivo.csv>                        - Exportar últimos resultados a CSV\n")
         help_text.append("  export_sql <tabla> <archivo.sql>            - Exportar tabla/colección a script\n")
         help_text.append("  export_db <archivo.sql>                     - Exportar BD completa (esquema y datos)\n")
+        help_text.append("  migrate <origen> <destino> <salida> [--sim] - Migrar base de datos por ETL (Jimmy)\n")
+        help_text.append("  validate backup <ruta> <motor> <db_name>    - Validar integridad de backup en Docker (Iker)\n")
         help_text.append("  help                                        - Muestra esta ayuda\n")
         help_text.append("  exit                                        - Salir de la aplicación\n")
 
@@ -966,3 +976,146 @@ class REPL:
                 rprint("[yellow]Revisa el backend SafeBridge: el warning indica que MySQL intentó usar el socket local en vez de una conexión de contenedor.[/yellow]")
         else:
             rprint(f"[bold red]❌ Error en la Validación Externa:[/bold red] {result}")
+
+    def _migrate(self, command: str):
+        """Ejecuta una migración de base de datos de origen a destino (ETL)"""
+        parts = shlex.split(command)
+        if len(parts) < 4:
+            rprint("[bold red]❌ Sintaxis incorrecta.[/bold red] Uso: `migrate <archivo_origen> <motor_destino> <archivo_salida> [--simulacion]`")
+            rprint("Ejemplo: [dim]migrate test.db postgres dump_postgres.sql[/dim]")
+            return
+            
+        archivo_origen = parts[1]
+        motor_destino = parts[2]
+        archivo_salida = parts[3]
+        
+        simulacion = False
+        if len(parts) > 4 and parts[4].lower() in ["--simulacion", "-s", "--sim", "simulacion"]:
+            simulacion = True
+            
+        if not os.path.exists(archivo_origen):
+            rprint(f"[bold red]❌ Error:[/bold red] El archivo de origen '{archivo_origen}' no existe.")
+            return
+            
+        # 1. DETECTAR EL TIPO DE BASE DE DATOS DE ORIGEN
+        rprint(f"[bold blue][ETL][/bold blue] Detectando tipo de base de datos de origen para '{archivo_origen}'...")
+        tipo_origen, msg_deteccion, _ = DetectorBaseDatos.detectar(archivo_origen, os.path.basename(archivo_origen))
+        
+        if tipo_origen == "Desconocido":
+            rprint(f"[bold red]❌ Error de detección:[/bold red] {msg_deteccion}")
+            return
+            
+        rprint(f"[bold green]✓ Origen detectado:[/bold green] [white]{tipo_origen}[/white] ({msg_deteccion})")
+        
+        # 2. CONECTAR ORIGEN Y DESTINO
+        try:
+            rprint(f"[bold blue][ETL][/bold blue] Cargando conector de origen...")
+            origen = ConectorOrigen(archivo_origen, tipo_origen)
+            if not origen.tablas:
+                rprint("[bold red]❌ Error:[/bold red] El origen no contiene ninguna tabla legible.")
+                return
+            rprint(f"[bold green]✓ Conector de origen listo.[/bold green] Encontradas {len(origen.tablas)} tablas.")
+            
+            rprint(f"[bold blue][ETL][/bold blue] Inicializando cargador para motor destino '{motor_destino}'...")
+            destino = CargadorDestino(motor_destino)
+            destino.tabla_a_esquema = origen.tabla_a_esquema
+        except Exception as e:
+            rprint(f"[bold red]❌ Error de inicialización ETL:[/bold red] {e}")
+            return
+            
+        # 3. CREAR ESTRUCTURA EN EL CARGADOR TEMPORAL
+        try:
+            rprint(f"[bold blue][ETL][/bold blue] Creando estructura de tablas en base intermedia...")
+            creadas = destino.crear_estructura(origen.esquema, origen.tabla_a_esquema)
+            rprint(f"[bold green]✓ Creadas {creadas} tablas en base intermedia.[/bold green]")
+        except Exception as e:
+            rprint(f"[bold red]❌ Error al crear estructura:[/bold red] {e}")
+            
+        # 4. MIGRAR DATOS POR BLOQUES (CHUNKS)
+        rprint(f"[bold blue][ETL][/bold blue] Iniciando extracción y carga por bloques (chunk size = 10000)...")
+        if simulacion:
+            rprint("[bold yellow]⚠️ MODO SIMULACIÓN ACTIVO (No se guardarán datos reales)[/bold yellow]")
+            
+        metricas = {'extraidos': 0, 'cargados': 0, 'errores': 0, 'tablas_ok': 0}
+        total_tablas = len(origen.tablas)
+        
+        for idx, tabla in enumerate(origen.tablas):
+            rprint(f"   [{idx+1}/{total_tablas}] Procesando tabla [cyan]{tabla}[/cyan]...")
+            
+            try:
+                filas_tabla_orig = 0
+                for chunk_df in origen.extraer_datos_chunked(tabla, chunksize=10000):
+                    filas_chunk = len(chunk_df)
+                    metricas['extraidos'] += filas_chunk
+                    filas_tabla_orig += filas_chunk
+                    
+                    if not chunk_df.empty:
+                        chunk_df = MapeadorDatos.limpiar_dataframe(chunk_df)
+                        
+                        if not simulacion:
+                            cargados = destino.cargar_tabla(tabla, chunk_df)
+                        else:
+                            cargados = filas_chunk
+                            
+                        metricas['cargados'] += cargados
+                        
+                rprint(f"   [green]✓[/green] Tabla [cyan]{tabla}[/cyan] completada ({filas_tabla_orig} registros).")
+                metricas['tablas_ok'] += 1
+            except Exception as e:
+                metricas['errores'] += 1
+                rprint(f"   [bold red]❌ Error en tabla {tabla}:[/bold red] {e}")
+                
+        # 5. MIGRAR VISTAS, TRIGGERS Y DEMÁS OBJETOS NO-TABULARES
+        rprint(f"[bold blue][ETL][/bold blue] Migrando vistas, triggers y otros objetos de base de datos...")
+        vistas_ok = 0
+        triggers_ok = 0
+        indices_ok = 0
+        procs_ok = 0
+        funcs_ok = 0
+        
+        if hasattr(origen, 'vistas') and origen.vistas:
+            vistas_ok = destino.crear_vistas(origen.vistas)
+        if hasattr(origen, 'triggers') and origen.triggers:
+            triggers_ok = destino.crear_triggers(origen.triggers)
+        if hasattr(origen, 'indices') and origen.indices:
+            indices_ok = destino.crear_indices(origen.indices)
+        if hasattr(origen, 'procedimientos') and origen.procedimientos:
+            procs_ok = destino.crear_procedimientos(origen.procedimientos)
+        if hasattr(origen, 'funciones') and origen.funciones:
+            funcs_ok = destino.crear_funciones(origen.funciones)
+            
+        rprint(f"   Objetos procesados: Vistas: {vistas_ok}, Triggers: {triggers_ok}, Índices: {indices_ok}, Proc: {procs_ok}, Func: {funcs_ok}")
+        
+        # 6. EXPORTAR AL ARCHIVO DE SALIDA
+        rprint(f"[bold blue][ETL][/bold blue] Generando archivo de exportación para '{motor_destino}'...")
+        try:
+            export_val, ext, mimetype, es_binario = destino.generar_export(motor_destino)
+            
+            salida_dir = os.path.dirname(os.path.abspath(archivo_salida))
+            if salida_dir and not os.path.exists(salida_dir):
+                os.makedirs(salida_dir, exist_ok=True)
+                
+            if es_binario:
+                import shutil
+                shutil.copy(export_val, archivo_salida)
+            else:
+                with open(archivo_salida, 'w', encoding='utf-8') as f:
+                    f.write(export_val)
+                    
+            rprint(f"[bold green]🎉 ¡MIGRACIÓN COMPLETADA EXITOSAMENTE![/bold green]")
+            
+            headers = ["Métrica / Resumen", "Resultado"]
+            rows = [
+                ["Tablas Procesadas con Éxito", f"{metricas['tablas_ok']} / {total_tablas}"],
+                ["Registros Extraídos", str(metricas['extraidos'])],
+                ["Registros Cargados", str(metricas['cargados'])],
+                ["Errores en Tablas", str(metricas['errores'])],
+                ["Vistas Procesadas", str(vistas_ok)],
+                ["Triggers Procesados", str(triggers_ok)],
+                ["Índices Procesados", str(indices_ok)],
+                ["Archivo Guardado En", archivo_salida]
+            ]
+            self.formatter.print_table(headers, rows)
+            
+        except Exception as e:
+            rprint(f"[bold red]❌ Error al exportar archivo final:[/bold red] {e}")
