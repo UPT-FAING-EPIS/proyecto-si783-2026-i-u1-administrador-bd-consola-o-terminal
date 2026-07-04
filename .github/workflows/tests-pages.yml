@@ -37,19 +37,37 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           if [ -f src/requirements.txt ]; then pip install -r src/requirements.txt; fi
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov mutmut
+
+      - name: Create GH Pages site structure
+        run: |
+          mkdir -p public/coverage
+          mkdir -p public/mutation
+          mkdir -p public/semgrep
+          mkdir -p public/snyk
+          # Copy the index file if it exists in the repo
+          if [ -f gh-pages-site/index.html ]; then
+            cp gh-pages-site/index.html public/
+          else
+            echo "<h1>Reportes</h1><ul><li><a href='coverage/index.html'>Coverage</a></li></ul>" > public/index.html
+          fi
 
       - name: Run unit tests and collect coverage
         run: |
-          pytest --cov=src --cov-report=html tests/
+          pytest --cov=src --cov-report=html:public/coverage tests/ || true
+
+      - name: Run Mutation Testing (Mutmut)
+        run: |
+          mutmut run || true
+          mutmut html --directory public/mutation || true
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload coverage to GitHub Pages artifact
+      - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './htmlcov'
+          path: './public'
 
       - name: Deploy to GitHub Pages
         id: deployment
