@@ -32,7 +32,7 @@ Mamani Cori, Cristhian Carlos (2023077282)
 
 | Versión | Hecha por | Revisada por | Aprobada por | Fecha | Motivo |
 |---------|-----------|--------------|--------------|-------|--------|
-| 1.0 | Jahuira Pilco, Dayan Elvis | Mamani Cori, Cristhian Carlos | Jahuira Pilco, Dayan Elvis | 26/04/2026 | Versión Original |
+| 1.0 | DJ - CM | PC | PC | 26/04/2026 | Versión Original |
 
 ---
 
