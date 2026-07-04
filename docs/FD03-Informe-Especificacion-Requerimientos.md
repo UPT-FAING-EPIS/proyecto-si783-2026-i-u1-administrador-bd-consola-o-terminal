@@ -168,7 +168,6 @@ El sistema es viable debido al uso de tecnologías accesibles, documentación di
 ### 5.2. Modelo Conceptual
 
 Incluye Diagrama de Paquetes, Diagrama de Casos de Uso, y los escenarios narrativos de los 10 casos de uso principales (CU001 a CU010): Seleccionar Modo, Conectar a Base de Datos, Gestionar Estructuras, Consultar Datos, Modificar Datos, Exportar Resultados a CSV, Ver Estado de Conexión, Mostrar Ayuda/Comandos, Desconectar BD y Salir del Sistema. Ver detalle completo en el documento .docx.
-![Uploading psquetes_srs.png…]()
 
 
 ### 5.3. Modelo Lógico
