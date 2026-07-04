@@ -63,15 +63,15 @@ Administrador de BD en consola o terminal
 
 ### 1.2. Duración del proyecto
 
-1 mes
+4 meses
 
 ### 1.3. Descripción
 
-El presente proyecto tiene como finalidad el desarrollo de una aplicación de tipo CLI (Command Line Interface) orientada a la administración de bases de datos relacionales. El sistema permitirá a los usuarios interactuar con un gestor de base de datos como PostgreSQL, MySQL o SQLite, mediante comandos estructurados definidos por la aplicación.
+El presente proyecto tiene como finalidad el desarrollo de una aplicación de tipo CLI (Command Line Interface) orientada a la administración de bases de datos tanto relacionales como no relacionales. El sistema, denominado NexusDB, permitirá a los usuarios interactuar con gestores de base de datos relacionales (SQLite, PostgreSQL, MySQL) y no relacionales (MongoDB, Redis, Cassandra), mediante comandos estructurados definidos por la aplicación, así como mediante un módulo de generación asistida de consultas SQL a partir de lenguaje natural, apoyado en modelos de lenguaje (IA).
 
-La herramienta será capaz de procesar instrucciones ingresadas por el usuario, interpretarlas mediante un módulo de análisis sintáctico y ejecutarlas sobre la base de datos, permitiendo operaciones de definición y manipulación de datos (DDL y DML). Asimismo, el sistema proporcionará mecanismos básicos de validación, control de errores y visualización de resultados en formato legible dentro del entorno de consola.
+La herramienta será capaz de procesar instrucciones ingresadas por el usuario, interpretarlas mediante un módulo de análisis sintáctico y ejecutarlas sobre la base de datos, permitiendo operaciones de definición y manipulación de datos (DDL y DML) tanto en motores SQL como en sus equivalentes NoSQL. Asimismo, el sistema proporcionará mecanismos básicos de validación, control de errores, auditoría de comandos y visualización de resultados en formato legible dentro del entorno de consola. El proyecto incluye además un módulo de migración ETL entre distintos motores de base de datos, un panel de rendimiento, un comparador de esquemas, un asistente de voz (NexusVoice) y un módulo de gestión de usuarios con control de permisos.
 
-Este proyecto se orienta tanto al aprendizaje práctico de la administración de bases de datos como al desarrollo de habilidades en el diseño de sistemas interactivos basados en comandos.
+Este proyecto se orienta tanto al aprendizaje práctico de la administración de bases de datos como al desarrollo de habilidades en el diseño de sistemas interactivos basados en comandos. Adicionalmente, el proyecto contempla la distribución del sistema mediante tres canales complementarios: una extensión para Visual Studio Code publicada en el Marketplace oficial, un servidor MCP (Model Context Protocol) publicado en el repositorio PyPI para su integración con asistentes de inteligencia artificial (Claude, Antigravity, Cursor, entre otros), y un bot de Telegram en modo de solo lectura para consultas remotas seguras. Con ello, se busca que el sistema no sea únicamente una herramienta de uso local, sino un producto de software distribuible y reutilizable por terceros.
 
 ### 1.4. Objetivos
 
@@ -86,6 +86,11 @@ Desarrollar una aplicación en consola que permita administrar una base de datos
 - Permitir operaciones CRUD sobre las tablas
 - Mostrar resultados de manera clara en consola
 - Validar comandos y manejar errores básicos
+- Incorporar soporte para motores de bases de datos no relacionales (MongoDB, Redis y Cassandra)
+- Desarrollar un módulo de migración ETL que permita mover datos entre distintos motores de base de datos
+- Integrar un asistente de generación de consultas SQL a partir de lenguaje natural mediante modelos de IA
+- Distribuir el sistema como extensión de Visual Studio Code, servidor MCP y bot de Telegram
+- Restringir las operaciones expuestas a integraciones externas (MCP y Telegram) a consultas de solo lectura, por motivos de seguridad
 
 ---
 
@@ -96,6 +101,10 @@ Desarrollar una aplicación en consola que permita administrar una base de datos
 - Errores en la interpretación de comandos
 - Limitaciones de tiempo para completar todas las funcionalidades
 - Fallas en la integración entre módulos
+- Incompatibilidad de drivers o versiones entre los distintos motores NoSQL soportados
+- Exposición accidental de credenciales de conexión en integraciones externas (bot de Telegram, servidor MCP)
+- Indisponibilidad del servidor VPS donde se despliegan el bot de Telegram y las bases de datos de prueba
+- Dependencia de servicios de terceros (APIs de modelos de IA, Marketplace de VS Code, PyPI, API de Telegram) que pueden cambiar sus políticas o interfaces
 
 ---
 
@@ -109,6 +118,8 @@ Por otro lado, en entornos profesionales y de servidores, el uso de interfaces d
 
 En este contexto, se identifica la necesidad de desarrollar una solución que permita comprender y aplicar los conceptos de administración de bases de datos mediante una interfaz de consola simplificada y controlada.
 
+Adicionalmente, se observa que la mayoría de herramientas existentes se enfocan exclusivamente en bases de datos relacionales, dejando de lado a los motores NoSQL, cuyo uso ha crecido de forma sostenida en aplicaciones modernas. Asimismo, la aparición de asistentes de inteligencia artificial capaces de operar herramientas externas mediante protocolos como MCP (Model Context Protocol) representa una oportunidad para modernizar la forma en que los desarrolladores interactúan con sus bases de datos, sin abandonar el control y la seguridad que ofrece una interfaz de consola tradicional.
+
 ### 3.2. Consideraciones de hardware y software
 
 | Tipo de Recurso | Nombre | Descripción |
@@ -117,6 +128,8 @@ En este contexto, se identifica la necesidad de desarrollar una solución que pe
 | Software | Windows 10/11 | Sistema Operativo base para ejecutar herramientas de desarrollo y el sistema. |
 | Software | Python 3.8+ | Ampliamente utilizado en aplicaciones CLI; sintaxis clara; gran cantidad de bibliotecas |
 | Software | VS Code | Entorno de desarrollo gratuito con soporte para Python |
+| Software | Node.js + TypeScript | Utilizado para el desarrollo y empaquetado de la extensión de Visual Studio Code |
+| Hardware | Servidor VPS (Contabo, Debian 13) | Utilizado para desplegar de forma permanente el bot de Telegram y las bases de datos de prueba (MySQL, MongoDB, Redis) |
 
 ---
 
@@ -128,8 +141,9 @@ En este contexto, se identifica la necesidad de desarrollar una solución que pe
 |----------|---------|-------------|
 | 1 | Laptop | Laptop ASUS, Procesador Ryzen, RAM: 16 GB, SSD: 1 TB y Mouse |
 | 1 | Laptop | Laptop Lenovo, Procesador Intel Core i5 de 6ta generación, 8 GB de RAM, SSD de 500 GB y Mouse |
+| 1 | Servidor VPS | Contabo VPS, Debian 13, usado para desplegar el bot de Telegram como servicio permanente (systemd) y alojar bases de datos de prueba MySQL, MongoDB y Redis |
 
-**Conclusión Técnica:** El proyecto es técnicamente viable. Se cuenta con dos equipos con especificaciones adecuadas para el desarrollo. Python es un lenguaje ideal para aplicaciones CLI y no requiere hardware especializado. Las librerías necesarias para la conexión a bases de datos son de código abierto y están disponibles gratuitamente.
+**Conclusión Técnica:** El proyecto es técnicamente viable. Se cuenta con dos equipos con especificaciones adecuadas para el desarrollo, además de un servidor VPS para el despliegue permanente de las integraciones externas. Python es un lenguaje ideal para aplicaciones CLI y no requiere hardware especializado. Las librerías necesarias para la conexión a bases de datos relacionales y NoSQL (psycopg2, mysql-connector-python, pymongo, redis, cassandra-driver) son de código abierto y están disponibles gratuitamente, al igual que las herramientas de publicación utilizadas (PyPI, Visual Studio Code Marketplace y la API de Bots de Telegram).
 
 ---
 
@@ -147,35 +161,39 @@ En este contexto, se identifica la necesidad de desarrollar una solución que pe
 
 | Concepto | Costo Mensual S/. | Duración meses | Costo Total S/. |
 |----------|-------------------|----------------|-----------------|
-| Energía eléctrica | 80 | 1 | 80 |
-| Internet | 100 | 1 | 100 |
-| **Total** | | | **180** |
+| Energía eléctrica | 80 | 4 | 320 |
+| Internet | 100 | 4 | 400 |
+| Hosting VPS (Contabo) | 35 | 4 | 140 |
+| Créditos API de IA (OpenAI/Anthropic) | 50 | 4 | 200 |
+| **Total** | | | **1 060** |
 
 #### 4.2.3. Costos del ambiente
 
 | Recurso | Costo Unitario S/. | Cantidad | Costo Total S/. |
 |---------|-------------------|----------|-----------------|
 | Configuración de entorno de desarrollo | 50 | 1 | 50 |
-| Pruebas del sistema | 80 | 1 | 80 |
+| Pruebas del sistema | 150 | 1 | 150 |
 | Repositorio GitHub | 20 | 1 | 20 |
-| **Total** | | | **150** |
+| Pruebas de integración (extensión VSC, servidor MCP, bot de Telegram) | 100 | 1 | 100 |
+| **Total** | | | **320** |
 
 #### 4.2.4. Costos de personal
 
 | Rol | Cantidad | Sueldo Mensual S/. | Meses | Subtotal S/. |
 |-----|----------|-------------------|-------|--------------|
-| Analista y Desarrollador | 2 | 3000 | 1 | 6000 |
-| **Total** | | | | **6000** |
+| Analista | 1 | 1 500 | 4 | 6 000 |
+| Desarrollador | 1 | 1 500 | 4 | 6 000 |
+| **Total** | | | | **12 000** |
 
 #### 4.2.5. Costos totales del desarrollo del sistema
 
 | Categoría | Total S/. |
 |-----------|-----------|
 | Costos Generales | 5,040 |
-| Costos Operativos | 180 |
-| Costos del Ambiente | 150 |
-| Costos de Personal | 6,000 |
-| **TOTAL GENERAL** | **11,370** |
+| Costos Operativos | 1,060 |
+| Costos del Ambiente | 320 |
+| Costos de Personal | 12,000 |
+| **TOTAL GENERAL** | **18,420** |
 
 ---
 
@@ -188,6 +206,7 @@ En este contexto, se identifica la necesidad de desarrollar una solución que pe
 | Mantenimiento | El código es simple y modular, fácil de mantener | Viable |
 | Documentación | Se incluirá un manual básico dentro del repositorio | Viable |
 | Soporte | Durante el periodo académico, los desarrolladores brindarán soporte | Viable |
+| Usuarios de integraciones externas | Usuarios de asistentes de IA (Claude, Antigravity, Cursor, entre otros) mediante el servidor MCP, y usuarios de Telegram mediante consultas de solo lectura, sin necesidad de instalar el proyecto completo | Viable |
 
 De acuerdo con el análisis presentado en la tabla, la factibilidad operativa del sistema resulta totalmente viable. Los usuarios objetivo tienen el perfil adecuado (conocimiento básico de bases de datos), el sistema incluye un comando de ayuda para facilitar su uso, y los riesgos identificados son controlables mediante una adecuada implementación de manejo de errores y documentación.
 
@@ -200,6 +219,7 @@ De acuerdo con el análisis presentado en la tabla, la factibilidad operativa de
 | Protección de Datos Personales | El sistema no almacena ni procesa datos personales de los usuarios. Solo interactúa con bases de datos locales del usuario. | Sí |
 | Uso de Software | Python es software de código abierto con licencia PSF. Visual Studio Code es gratuito. No se requiere software comercial. | Sí |
 | Propiedad Intelectual | El código desarrollado es propiedad de los autores. Se utilizará licencia MIT para permitir uso académico y comercial. | Sí |
+| Términos de plataformas de distribución | La publicación en el Visual Studio Code Marketplace, PyPI y la API de Bots de Telegram se realiza cumpliendo los acuerdos de publicación de cada plataforma (Marketplace Publisher Agreement, PyPI Terms of Use y Telegram Bot API Terms), sin costo asociado. | Sí |
 
 ---
 
@@ -233,7 +253,9 @@ La inversión en el desarrollo del Administrador de BD en consola se justifica p
 - Reducción del tiempo de aprendizaje para comandos SQL mediante una interfaz simplificada
 - Automatización de tareas repetitivas de administración de bases de datos
 - Disponibilidad de una herramienta didáctica gratuita para la enseñanza de bases de datos
-- Bajos costos en infraestructura por ser una aplicación 100% Python
+- Cero costos en infraestructura por ser una aplicación 100% Python
+- Ampliación del público alcanzable mediante distribución en el Marketplace de VS Code, PyPI y Telegram, sin costos de licenciamiento
+- Reducción de la barrera de entrada al uso de bases de datos NoSQL mediante una sintaxis unificada con el motor relacional
 
 ### 5.2. Beneficios del Proyecto
 
@@ -244,6 +266,8 @@ La inversión en el desarrollo del Administrador de BD en consola se justifica p
 - Disponibilidad de código fuente para futuras adaptaciones
 - Independencia de plataformas comerciales
 - Código ligero y portable al usar solo Python estándar
+- Experiencia práctica del equipo en integración con protocolos emergentes de IA (MCP) y en buenas prácticas de seguridad para bots conversacionales
+- Portafolio de distribución real (Marketplace, PyPI y Telegram) que fortalece el perfil profesional de los integrantes
 
 ### 5.3. Criterios de Inversión
 
@@ -253,36 +277,40 @@ Para la evaluación financiera se considera un horizonte de 3 años, con un cost
 
 | Año | Beneficios S/. | Mantenimiento S/. | Beneficio Neto S/. |
 |-----|----------------|-------------------|-------------------|
-| 0 | 0 | 11,370 | -11,370 |
-| 1 | 4,500 | 400 | 4,100 |
-| 2 | 5,000 | 450 | 4,550 |
-| 3 | 5,500 | 500 | 5,000 |
+| 0 | 0 | 18,420 | -18,420 |
+| 1 | 8,500 | 500 | 8,000 |
+| 2 | 9,500 | 500 | 9,000 |
+| 3 | 11,000 | 500 | 10,500 |
 
 #### 5.3.1. Relación Beneficio Costo B/C
 
-Valor Presente de los Beneficios VPB = 10,847.15
+B/C = Beneficios netos actualizados / Inversión inicial
 
-Valor Presente de los Costos VPC = 12,441.80
+B/C = (8,000/1.12 + 9,000/1.12² + 10,500/1.12³) / 18,420
 
-**Relación B/C = 10,847.15 / 12,441.80 = 0.87**
+B/C = 21,793.27 / 18,420 = **1.18**
 
-**Interpretación:** B/C es menor a 1, por lo tanto, los beneficios no superan a los costos.
+**Interpretación:** Como B/C es mayor a 1, por cada sol invertido el proyecto genera S/. 1.18 en beneficios actualizados, lo que indica que el proyecto es rentable.
 
 #### 5.3.2. Valor Actual Neto VAN
 
-VAN = -11,370 + 4,100/(1.12)¹ + 4,550/(1.12)² + 5,000/(1.12)³
+VAN = -18,420 + 8,000/(1.12)¹ + 9,000/(1.12)² + 10,500/(1.12)³
 
-VAN = -11,370 + 3,660.89 + 3,627.26 + 3,559.00
+VAN = -18,420 + 7,142.86 + 7,175.51 + 7,474.90
 
-**VAN = S/. -522.85**
+**VAN = S/. 3,373.27**
 
-**Interpretación:** VAN es menor a 0, por lo tanto, el proyecto no genera valor suficiente para recuperar la inversión.
+**Interpretación:** VAN es mayor a 0, por lo tanto, el proyecto genera valor por encima de lo necesario para recuperar la inversión, considerando una tasa de descuento del 12%.
 
 #### 5.3.3. Tasa Interna de Retorno TIR
 
-**TIR ≈ 9.4 por ciento**
+Probando con tasa 21%: VAN = -18,420 + 6,611.57 + 6,147.12 + 5,926.62 = 265.31
 
-**Interpretación:** TIR 9.4% es menor al COK 12%, por lo tanto, el proyecto no es rentable.
+Probando con tasa 22%: VAN = -18,420 + 6,557.38 + 6,047.03 + 5,783.36 = -32.23
+
+**TIR ≈ 21.9 por ciento**
+
+**Interpretación:** TIR 21.9% es mayor al COK 12%, por lo tanto, el proyecto es rentable.
 
 ---
 
@@ -290,9 +318,9 @@ VAN = -11,370 + 3,660.89 + 3,627.26 + 3,559.00
 
 | Indicador | Valor | Criterio | Decisión |
 |-----------|-------|----------|----------|
-| Relación B/C | 0.87 | Mayor a 1 | Rechazar |
-| VAN | S/. -522.85 | Mayor a 0 | Rechazar |
-| TIR | 9.4% | Mayor a COK 12% | Rechazar |
+| Relación B/C | 1.18 | Mayor a 1 | Aceptar |
+| VAN | S/. 3,373.27 | Mayor a 0 | Aceptar |
+| TIR | 21.9% | Mayor a COK 12% | Aceptar |
 
 ---
 
@@ -300,11 +328,11 @@ VAN = -11,370 + 3,660.89 + 3,627.26 + 3,559.00
 
 El análisis de factibilidad realizado para el proyecto Administrador de BD en consola o terminal arroja los siguientes resultados:
 
-**Factibilidad Técnica:** El proyecto es viable pues se cuenta con los conocimientos y herramientas necesarias para su desarrollo. Python con sus librerías estándar permite construir una aplicación CLI completa sin requerir infraestructura adicional.
+**Factibilidad Técnica:** El proyecto es viable pues se cuenta con los conocimientos y herramientas necesarias para su desarrollo. Python con sus librerías estándar y de terceros permite construir una aplicación CLI completa con soporte SQL y NoSQL, integraciones de IA y distribución multicanal, sin requerir infraestructura costosa adicional más allá de un servidor VPS de bajo costo.
 
-**Factibilidad Económica:** La inversión total asciende a S/. 11,370.00. Los indicadores financieros muestran resultados no favorables con un VAN de S/. -522.85, una TIR de 9.4 por ciento y una relación Beneficio Costo de 0.87, todos inferiores a los criterios mínimos establecidos.
+**Factibilidad Económica:** La inversión total asciende a S/. 18,420.00. Los indicadores financieros muestran resultados favorables con un VAN de S/. 3,373.27, una TIR de 21.9 por ciento y una relación Beneficio Costo de 1.18, todos superiores a los criterios mínimos establecidos (VAN mayor a 0 y TIR mayor a la tasa de descuento del 12 por ciento).
 
-**Factibilidad Operativa:** La interfaz de línea de comandos con comando help facilita la curva de aprendizaje. Los usuarios objetivo estudiantes y docentes cuentan con el perfil adecuado.
+**Factibilidad Operativa:** La interfaz de línea de comandos con comando help facilita la curva de aprendizaje. Los usuarios objetivo estudiantes y docentes cuentan con el perfil adecuado. Adicionalmente, la distribución mediante extensión de VS Code, servidor MCP y bot de Telegram amplía el alcance operativo a usuarios que no necesariamente usan la terminal como interfaz principal.
 
 **Factibilidad Legal:** El proyecto utiliza exclusivamente software de código abierto con licencias permisivas, cumpliendo con las normativas de propiedad intelectual.
 
@@ -312,4 +340,4 @@ El análisis de factibilidad realizado para el proyecto Administrador de BD en c
 
 **Factibilidad Ambiental:** El proyecto no genera residuos electrónicos ni consume recursos adicionales, promoviendo el uso de software libre.
 
-**Conclusión Final:** A pesar de que el proyecto es técnicamente viable y presenta beneficios sociales y educativos significativos, desde la perspectiva estrictamente financiera los indicadores muestran que no se recuperaría la inversión. Sin embargo, tratándose de un proyecto académico donde los costos de personal no representan un desembolso real y los equipos ya son propiedad de los desarrolladores, se recomienda proceder con el desarrollo considerando el valor formativo y la contribución al aprendizaje.
+**Conclusión Final:** El proyecto es viable en todas sus dimensiones: técnica, económica, operativa, legal, social y ambiental. Los indicadores financieros (VAN positivo, TIR superior al COK y B/C mayor a 1) confirman que la inversión se recupera y genera valor adicional, considerando además el importante valor formativo del proyecto para el equipo desarrollador.

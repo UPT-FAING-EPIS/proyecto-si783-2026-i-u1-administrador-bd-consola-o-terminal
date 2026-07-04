@@ -66,25 +66,29 @@ Definir la visión general del sistema “Administrador de Base de Datos en Cons
 
 ### 1.2 Alcance
 
-El sistema permitirá administrar bases de datos mediante CLI ejecutando operaciones SQL.
+El sistema permitirá administrar bases de datos relacionales y no relacionales mediante CLI, ejecutando operaciones SQL. Se integra con seis gestores: PostgreSQL, MySQL y SQLite (relacionales), y MongoDB, Redis y Cassandra (NoSQL). Se distribuye además mediante una extensión de VS Code, un servidor MCP y un bot de Telegram (solo lectura).
 
 **Dentro del alcance:**
 
-- Conexión a BD existentes  
+- Conexión a BD existentes (relacionales y NoSQL)  
 - Ejecución de SQL (SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER)  
 - Visualización en tabla  
 - Listado de tablas  
 - Manejo básico de errores  
 - Comando `help` y `exit`  
+- Consultas de solo lectura sobre MongoDB, Redis y Cassandra  
+- Generación de SQL desde lenguaje natural mediante IA (con respaldo por patrones)  
+- Distribución mediante extensión de VS Code, servidor MCP y bot de Telegram  
 
 **Fuera del alcance:**
 
 - Motor de BD propio  
 - Interfaz gráfica  
-- Gestión de usuarios  
+- Gestión de usuarios avanzada a nivel de SGBD  
 - Exportación (CSV, Excel, PDF)  
 - Conexión múltiple simultánea  
 - Backups automatizados  
+- Operaciones de escritura desde las integraciones externas (MCP y Telegram solo permiten lectura)  
 
 ---
 
@@ -222,11 +226,11 @@ Aplicación Python que actúa como intermediario entre usuario y DBMS.
 
 | Categoría | Total S/. |
 |----------|-----------|
-| Generales | 5040 |
-| Operativos | 180 |
-| Ambiente | 150 |
-| Personal | 6000 |
-| **Total** | **11370** |
+| Generales | 5,040 |
+| Operativos | 1,060 |
+| Ambiente | 320 |
+| Personal | 12,000 |
+| **Total** | **18,420** |
 
 ---
 
@@ -252,12 +256,15 @@ Licencia MIT.
 - info  
 - disconnect  
 - clear  
+- Conexión y consultas de lectura sobre MongoDB, Redis y Cassandra  
 
 **COULD**
 
 - help avanzado  
 - historial  
 - exportación CSV  
+- Generación de SQL desde lenguaje natural (comando preguntar)  
+- Distribución vía VS Code, servidor MCP y bot de Telegram  
 
 ---
 
@@ -267,7 +274,8 @@ Licencia MIT.
 - BD instalada  
 - Sin GUI  
 - Dependencias Python  
-- Tiempo 1 mes  
+- Tiempo 4 meses  
+- Integraciones externas (MCP/Telegram) solo de lectura, sin excepción  
 
 ---
 
@@ -297,6 +305,7 @@ Licencia MIT.
 
 - Licencia MIT  
 - Código propio  
+- Cumplimiento de acuerdos de publicación (VS Code Marketplace, PyPI, Telegram Bot API), sin costo  
 
 ### Comunicación
 
@@ -312,6 +321,7 @@ Licencia MIT.
 
 - Código modular  
 - No guardar credenciales  
+- El servidor MCP y el bot de Telegram validan cada comando contra un patrón de solo lectura, rechazando cualquier escritura  
 
 ---
 
