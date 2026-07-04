@@ -8,6 +8,12 @@ import os
 import csv
 import shlex
 
+from prompt_toolkit import prompt as pt_prompt
+from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.styles import Style
+
 # Agregar la carpeta actual al path para poder importar
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -32,6 +38,40 @@ from rich.panel import Panel
 from rich.text import Text
 from rich import print as rprint
 
+# ── Módulos de extensión Nexus-DB ──────────────────────────────────────────
+from features.ai_helper import sugerir_sql
+from features.panel_rendimiento import mostrar_panel
+from features.programador_tareas import ProgramadorTareas
+from features.usuarios import GestorUsuarios
+from features.comparador import comparar_bds, revisar_seguridad
+from features.ux_mejoras import (
+    emoji_motor, mostrar_sugerencia, expandir_abreviacion,
+    COMPLETIONS_EXTRA, exito, error as ux_error, advertencia, info, conexion,
+)
+from features.asistente_voz import resumir_resultado, es_palabra_salir
+from features.cerebro_sql import generar_sql, disponible as ia_disponible
+from features.bookmarks import BookmarkManager
+from features.erd_generator import generar_diagrama
+
+class _NexusCompleter(Completer):
+    """Proveedor de autocompletado TAB para prompt_toolkit."""
+
+    def __init__(self, repl_instance):
+        self._repl = repl_instance
+
+    def get_completions(self, document, complete_event):
+        import re
+        # Extraer la última palabra escrita (puede contener _, -, etc)
+        word_before_cursor = document.get_word_before_cursor(pattern=re.compile(r'[\w\-]+'))
+        if not word_before_cursor:
+            return
+            
+        options = self._repl._get_completions(document.text_before_cursor)
+        # Usar un set para evitar duplicados
+        for opt in sorted(set(options)):
+            if opt.lower().startswith(word_before_cursor.lower()):
+                yield Completion(opt, start_position=-len(word_before_cursor))
+
 
 class REPL:
     """Bucle principal de la aplicación"""
@@ -41,54 +81,237 @@ class REPL:
         self.mode = mode
         self.console = Console()
         self.connector = None
+        self.connector2 = None          # Segundo conector para diff
         self.formatter = TableFormatter()
-        self.last_results = None  # Almacena el resultado del último SELECT
+        self.last_results = None        # Almacena el resultado del último SELECT
+        self.last_exec_error = None     # Último error SQL (para NexusVoice)
+        self.in_transaction = False
+        self._schema_cache = {}
+
+        # Módulos de extensión
+        self.gestor_usuarios = GestorUsuarios()
+        self.programador = ProgramadorTareas(repl_execute_fn=self.execute)
+        self.voz = None                  # NexusVoice (carga perezosa)
+        self.bookmark_mgr = BookmarkManager()
+
+        # prompt_toolkit: historial de comandos y autocompletado
+        history_path = os.path.expanduser('~/.nexusdb_history')
+        self._history   = FileHistory(history_path)
+        self._completer = _NexusCompleter(self)
+        self._pt_style  = Style.from_dict({"prompt": "bold cyan"})
+        self._pt_kb     = self._build_keybindings()
+
+        self._setup_autocomplete()  # fallback readline (no-op si prompt_toolkit funciona)
 
     def _get_prompt(self):
-        """Genera el prompt dinámicamente según el estado de la conexión"""
-        base = "dbcli-rel" if self.mode == "rel" else "dbcli-nosql"
+        """Genera el prompt dinámicamente según el estado de la conexión."""
+        base = "nexus-db"
+        user_prefix = f"{self.gestor_usuarios.usuario_actual}@" if self.gestor_usuarios.usuario_actual else ""
         if self.connector and self.connector.is_connected:
             db_type = self.connector.get_type().lower()
             db_info = self.connector.get_info()
-            # Extraer solo el nombre del archivo si es path completo
             db_name = os.path.basename(db_info)
-            return f"[{base} | {db_type}: {db_name}] > "
-        return f"{base} > "
+            em = emoji_motor(db_type)
+            tx_indicator = "[bold red]TX[/bold red] | " if self.in_transaction else ""
+            return f"[{tx_indicator}{base} | {user_prefix}{em} {db_type}: {db_name}] > "
+        return f"[{base} | {user_prefix}📂 desconectado] > "
+
+    def _build_keybindings(self):
+        """Define atajos de teclado adicionales para prompt_toolkit."""
+        kb = KeyBindings()
+
+        @kb.add("c-l")          # Ctrl+L → limpiar pantalla
+        def _ctrl_l(event):
+            os.system("cls" if os.name == "nt" else "clear")
+            event.app.renderer.reset()
+            event.app.invalidate()
+
+        return kb
+
+    def _setup_autocomplete(self):
+        """Fallback readline — solo actúa si prompt_toolkit no está disponible."""
+        try:
+            import readline
+            delims = readline.get_completer_delims()
+            readline.set_completer_delims(delims.replace(' ', '').replace('\t', ''))
+            readline.set_completer(self._completer_readline)
+            readline.parse_and_bind("tab: complete")
+        except Exception:
+            pass
+
+    def _completer_readline(self, text, state):
+        """Completer para readline (fallback en sistemas sin prompt_toolkit)."""
+        try:
+            words = text.split()
+            last_word = words[-1] if words else text
+            options = self._get_completions(text)
+            matches = sorted(list(set([o for o in options if o.lower().startswith(last_word.lower())])))
+            return matches[state] if state < len(matches) else None
+        except Exception:
+            return None
+
+    def _get_completions(self, text: str) -> list:
+        """Obtiene una lista de palabras sugeridas basadas en el texto actual"""
+        keywords = [
+            "SELECT", "FROM", "WHERE", "INSERT", "INTO", "VALUES", "UPDATE", "SET", 
+            "DELETE", "JOIN", "ON", "AND", "OR", "LIMIT", "ORDER BY", "GROUP BY", 
+            "CREATE TABLE", "DROP TABLE", "SHOW TABLES", "BEGIN", "COMMIT", "ROLLBACK",
+            "FIND", "GET", "DEL", "KEYS", "SHOW COLLECTIONS", "SHOW KEYS"
+        ]
+        custom = [
+            "connect", "disconnect", "status", "exit", "help", "panel", 
+            "search", "bookmark", "generate_erd", "export", "import", 
+            "migrate", "validate backup"
+        ] + COMPLETIONS_EXTRA
+
+        tables = []
+        if self.connector and self.connector.is_connected:
+            try:
+                success, tbl_list, _ = self.connector.get_tables()
+                if success:
+                    tables = tbl_list
+            except Exception:
+                pass
+
+        columns = []
+        text_lower = text.lower()
+        if tables:
+            for t in tables:
+                # Si la tabla se menciona en el comando, sugerimos sus columnas
+                if t.lower() in text_lower:
+                    if t not in self._schema_cache:
+                        db_type = self.connector.get_type().lower()
+                        query = f"SELECT * FROM {t} LIMIT 0"
+                        if "postgres" in db_type:
+                            query = f'SELECT * FROM "{t}" LIMIT 0'
+                        elif "mysql" in db_type:
+                            query = f"SELECT * FROM `{t}` LIMIT 0"
+                        
+                        s, data, _ = self.connector.execute_query(query)
+                        if s and data and data.get("columns"):
+                            self._schema_cache[t] = data["columns"]
+                            
+                    columns.extend(self._schema_cache.get(t, []))
+
+        return keywords + custom + tables + columns
+
+    def _clear_screen(self):
+        """Limpia la pantalla de la terminal."""
+        os.system('cls' if os.name == 'nt' else 'clear')
 
     def run(self):
-        """Ejecuta el bucle principal"""
+        """Ejecuta el bucle principal usando prompt_toolkit para TAB y historial."""
         while self.running:
             try:
                 current_prompt = self._get_prompt()
-                command = input(current_prompt).strip()
+
+                command = pt_prompt(
+                    current_prompt,
+                    completer=self._completer,
+                    history=self._history,
+                    key_bindings=self._pt_kb,
+                    style=self._pt_style,
+                    complete_while_typing=False,   # solo al presionar TAB
+                ).strip()
+
                 if not command:
                     continue
-                
-                # Try-except global para capturar errores de ejecución sin cerrar la app
+
+                if command.lower() in ('cls', 'clear'):
+                    self._clear_screen()
+                    continue
+
                 try:
                     self.execute(command)
                 except Exception as e:
                     rprint(f"\n[bold red]ERROR de ejecución:[/bold red] [white]{e}[/white]")
                     rprint("[yellow]La aplicación sigue activa. Intenta de nuevo.[/yellow]\n")
-                    
+
             except EOFError:
                 print()
                 break
             except KeyboardInterrupt:
-                rprint("\n[yellow]Usa 'exit' para salir correctamente.[/yellow]")
+                rprint("\n[yellow]Usa 'exit' para salir. Ctrl+L para limpiar pantalla.[/yellow]")
                 continue
 
     def execute(self, command: str):
         """Ejecuta un comando según su tipo"""
+        # Expandir abreviaciones antes de procesar
+        command = expandir_abreviacion(command)
         cmd = command.lower().strip()
 
+        # ── Comandos sin autenticación requerida ───────────────────────────────
         if cmd == "exit":
             self._exit()
+            return
         elif cmd == "help":
             self._help()
-        elif cmd.startswith("validate backup"): # Captura el comando de validación externa
+            return
+
+        # ── Control por voz (NexusVoice) ───────────────────────────────────────
+        elif cmd in ("voz", "voice", "voz on", "voice on"):
+            self._handle_voice_loop()
+            return
+        elif cmd in ("voz once", "voice once"):
+            self._handle_voice_once()
+            return
+        elif cmd.startswith("voz engine") or cmd.startswith("voice engine"):
+            self._handle_voice_engine(command)
+            return
+        elif cmd.startswith("voz test") or cmd.startswith("voice test"):
+            self._handle_voice_test(command)
+            return
+
+        # ── Autenticación / usuarios ───────────────────────────────────────────
+        elif cmd.startswith("login") or cmd == "logout" or cmd == "whoami" or cmd.startswith("users"):
+            self._handle_auth(command)
+            return
+
+        # ── Verificar permiso de rol (si hay sesión activa) ───────────────────
+        if not self.gestor_usuarios.tiene_permiso(command):
+            rprint(f"[bold red]❌ Permiso denegado:[/bold red] el rol '[yellow]{self.gestor_usuarios.rol_actual}[/yellow]' "
+                   f"no puede ejecutar '{cmd.split()[0]}'.")
+            return
+
+        # ── Auditar el comando ─────────────────────────────────────────────────
+        self.gestor_usuarios.registrar_comando(command)
+
+        # ── Verificación de seguridad para comandos peligrosos ─────────────────
+        if not revisar_seguridad(command):
+            return
+
+        # ── Nuevos módulos ─────────────────────────────────────────────────────
+        if cmd.startswith("ai"):
+            self._handle_ai(command)
+        elif cmd == "panel":
+            self._handle_panel()
+        elif cmd.startswith("schedule"):
+            self._handle_schedule(command)
+        elif cmd.startswith("diff"):
+            self._handle_diff(command)
+        elif cmd.startswith("connect2"):
+            self._connect2(command)
+        
+        # ── Transacciones ──────────────────────────────────────────────────────
+        elif cmd in ("begin", "commit", "rollback"):
+            self._handle_transaction(cmd)
+            return
+            
+        # ── Búsqueda Global, Bookmarks, ERD ────────────────────────────────────
+        elif cmd.startswith("search "):
+            self._handle_search(command)
+            return
+        elif cmd.startswith("bookmark"):
+            self._handle_bookmark(command)
+            return
+        elif cmd == "generate_erd":
+            self._handle_erd()
+            return
+
+        # ── Comandos existentes ────────────────────────────────────────────────
+        elif cmd.startswith("validate backup"):
             self._handle_safebridge_validation(command)
-        elif cmd.startswith("migrate"): # Captura el comando de migración ETL de Jimmy
+        elif cmd.startswith("migrate"):
             self._migrate(command)
         elif cmd.startswith("connect"):
             self._connect(command)
@@ -109,6 +332,7 @@ class REPL:
         else:
             if not self.connector or not self.connector.is_connected:
                 rprint("[bold red]ERROR:[/bold red] No hay conexión activa. [yellow]Usa 'connect' primero.[/yellow]")
+                mostrar_sugerencia("connect")
                 return
 
             if self.mode == "rel":
@@ -135,13 +359,579 @@ class REPL:
                 else:
                     self._execute_nosql_query(command)
 
+    # ── Handlers de nuevos módulos ─────────────────────────────────────────────
+
+    def _handle_transaction(self, cmd: str):
+        if not self.connector or not self.connector.is_connected:
+            rprint("[bold red]ERROR:[/bold red] No hay conexión activa.")
+            return
+            
+        if self.mode != "rel":
+            rprint("[bold yellow]INFO:[/bold yellow] Transacciones explícitas solo en modo relacional.")
+            return
+            
+        success, _, err = self.connector.execute_query(cmd)
+        if success:
+            if cmd == "begin":
+                self.in_transaction = True
+                rprint("[bold green]OK: Transacción iniciada.[/bold green]")
+            elif cmd == "commit":
+                self.in_transaction = False
+                rprint("[bold green]OK: Transacción confirmada (COMMIT).[/bold green]")
+            elif cmd == "rollback":
+                self.in_transaction = False
+                rprint("[bold yellow]OK: Transacción revertida (ROLLBACK).[/bold yellow]")
+        else:
+            # Si falla un commit o rollback (ej: no hay transacción activa),
+            # limpiamos el indicador de todas formas para no trabar el prompt.
+            if cmd in ("commit", "rollback"):
+                self.in_transaction = False
+            rprint(f"[bold red]ERROR en {cmd.upper()}:[/bold red] {err}")
+
+    def _handle_search(self, command: str):
+        if not self.connector or not self.connector.is_connected:
+            rprint("[bold red]ERROR:[/bold red] No hay conexión activa.")
+            return
+            
+        import shlex
+        try:
+            parts = shlex.split(command)
+        except ValueError:
+            parts = command.split()
+            
+        if len(parts) < 2:
+            rprint("[yellow]Uso: search \"texto\"[/yellow]")
+            return
+            
+        term = parts[1]
+        
+        if self.mode != "rel":
+            rprint("[yellow]Búsqueda global soportada en modo relacional.[/yellow]")
+            return
+
+        s, tables, err = self.connector.get_tables()
+        if not s or not tables:
+            rprint("[yellow]No hay tablas o error al leerlas.[/yellow]")
+            return
+            
+        rprint(f"[bold blue]🔍 Buscando '{term}' en {len(tables)} tablas...[/bold blue]")
+        
+        safe_term = term.replace("'", "''")
+        match_count = 0
+        db_type = self.connector.get_type().lower()
+        
+        for table in tables:
+            query_col = f"SELECT * FROM {table} LIMIT 0"
+            if "postgres" in db_type:
+                query_col = f'SELECT * FROM "{table}" LIMIT 0'
+            elif "mysql" in db_type:
+                query_col = f"SELECT * FROM `{table}` LIMIT 0"
+                
+            s, data, err = self.connector.execute_query(query_col)
+            if not s or not data or not data.get("columns"):
+                continue
+            
+            columns = data["columns"]
+            where_clauses = []
+            
+            for col in columns:
+                if "postgres" in db_type:
+                    where_clauses.append(f'CAST("{col}" AS TEXT) ILIKE \'%{safe_term}%\'')
+                elif "mysql" in db_type:
+                    where_clauses.append(f"`{col}` LIKE '%{safe_term}%'")
+                else:
+                    where_clauses.append(f"CAST(\"{col}\" AS TEXT) LIKE '%{safe_term}%'")
+            
+            if not where_clauses:
+                continue
+                
+            where_sql = " OR ".join(where_clauses)
+            
+            query = f"SELECT * FROM {table} WHERE {where_sql} LIMIT 50"
+            if "postgres" in db_type:
+                query = f'SELECT * FROM "{table}" WHERE {where_sql} LIMIT 50'
+            elif "mysql" in db_type:
+                query = f"SELECT * FROM `{table}` WHERE {where_sql} LIMIT 50"
+                
+            s, data, err = self.connector.execute_query(query)
+            if s and data and data.get("rows"):
+                rprint(f"\n[bold green]✅ Coincidencias en la tabla '{table}' ({len(data['rows'])} filas):[/bold green]")
+                self.formatter.print_table(data["columns"], data["rows"])
+                match_count += 1
+                
+        if match_count == 0:
+            rprint("[yellow]No se encontraron resultados en ninguna tabla.[/yellow]")
+
+    def _handle_bookmark(self, command: str):
+        parts = command.strip().split(None, 2)
+        if len(parts) < 2:
+            rprint("[yellow]Uso: bookmark list | bookmark save <alias> \"<sql>\" | bookmark run <alias> | bookmark delete <alias>[/yellow]")
+            return
+            
+        action = parts[1].lower()
+        
+        if action == "list":
+            self.bookmark_mgr.list_all()
+        elif action == "delete" and len(parts) >= 3:
+            if self.bookmark_mgr.delete(parts[2]):
+                exito(f"Bookmark '{parts[2]}' eliminado.")
+            else:
+                rprint(f"[red]No se encontró el bookmark '{parts[2]}'.[/red]")
+        elif action == "save" and len(parts) >= 3:
+            import shlex
+            subparts = shlex.split(parts[2])
+            if len(subparts) >= 2:
+                alias = subparts[0]
+                sql = subparts[1]
+                if self.bookmark_mgr.add(alias, sql):
+                    exito(f"Bookmark '{alias}' guardado.")
+            else:
+                rprint("[yellow]Uso: bookmark save <alias> \"<sql>\"[/yellow]")
+        elif action == "run" and len(parts) >= 3:
+            alias = parts[2]
+            sql = self.bookmark_mgr.get(alias)
+            if sql:
+                rprint(f"[cyan]Ejecutando '{alias}':[/cyan] [white]{sql}[/white]")
+                self.execute(sql)
+            else:
+                rprint(f"[red]No se encontró el bookmark '{alias}'.[/red]")
+        else:
+            rprint("[red]Acción desconocida o parámetros incompletos.[/red]")
+
+    def _handle_erd(self):
+        if not self.connector or not self.connector.is_connected:
+            rprint("[bold red]ERROR:[/bold red] No hay conexión activa.")
+            return
+        if self.mode != "rel":
+            rprint("[yellow]Los diagramas ERD solo están soportados en modo relacional.[/yellow]")
+            return
+            
+        rprint("[blue]Generando diagrama ERD...[/blue]")
+        mermaid_code = generar_diagrama(self.connector)
+        
+        if not mermaid_code:
+            rprint("[yellow]No se pudo generar el diagrama. ¿Hay tablas en la BD?[/yellow]")
+            return
+            
+        filename = "diagrama_erd.md"
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write("```mermaid\n")
+            f.write(mermaid_code)
+            f.write("\n```\n")
+            
+        rprint(f"[bold green]✅ Diagrama guardado en '{filename}'.[/bold green]")
+        rprint("[dim]Puedes visualizarlo con extensiones de Markdown o PlantUML/Mermaid en tu editor.[/dim]")
+
+    def _handle_ai(self, command: str):
+        """Asistente de lenguaje natural → SQL."""
+        # Extraer el texto entre comillas o sin ellas
+        import re as _re
+        m = _re.match(r'^ai\s+"(.+)"$', command.strip(), _re.IGNORECASE)
+        if not m:
+            m = _re.match(r"^ai\s+'(.+)'$", command.strip(), _re.IGNORECASE)
+        if not m:
+            m = _re.match(r'^ai\s+(.+)$', command.strip(), _re.IGNORECASE)
+
+        if not m:
+            rprint("[yellow]Uso: ai \"<texto en español>\"[/yellow]")
+            mostrar_sugerencia("ai")
+            return
+
+        texto = m.group(1).strip()
+        sql, fuente = generar_sql(texto, self.connector, self.mode)
+
+        if not sql:
+            rprint(f"[yellow]💡 No pude generar SQL para esa petición.[/yellow]")
+            mostrar_sugerencia("ai")
+            return
+
+        etiqueta = "🧠 IA (Claude)" if fuente == "ia" else "🔤 patrón"
+        rprint(f"\n[bold cyan]💡 SQL sugerido ({etiqueta}):[/bold cyan] [white]{sql}[/white]")
+
+        if not self.connector or not self.connector.is_connected:
+            rprint("[dim]Conéctate a una BD para ejecutar la consulta.[/dim]")
+            return
+
+        try:
+            resp = input("¿Ejecutar? (s/n): ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            resp = "n"
+
+        if resp == "s":
+            self.execute(sql)
+
+    def _handle_panel(self):
+        """Muestra el panel de rendimiento del motor activo."""
+        mostrar_panel(self.connector)
+
+    def _handle_schedule(self, command: str):
+        """Gestiona tareas programadas."""
+        parts = command.strip().split(None, 1)
+        if len(parts) < 2:
+            rprint("[yellow]Uso: schedule add <cmd> at HH:MM | schedule add <cmd> every N hours | schedule list | schedule cancel <id>[/yellow]")
+            mostrar_sugerencia("schedule")
+            return
+
+        sub = parts[1].strip()
+
+        if sub == "list":
+            self.programador.listar()
+            return
+
+        if sub.startswith("cancel "):
+            try:
+                tid = int(sub.split()[1])
+            except (IndexError, ValueError):
+                rprint("[red]Uso: schedule cancel <id>[/red]")
+                return
+            if self.programador.cancelar(tid):
+                exito(f"Tarea #{tid} cancelada.")
+            else:
+                rprint(f"[red]No se encontró la tarea #{tid}.[/red]")
+            return
+
+        if sub.startswith("add "):
+            resto = sub[4:].strip()
+
+            # schedule add <cmd> every N hours
+            import re as _re
+            m = _re.search(r'^(.+?)\s+every\s+(\d+)\s+hours?$', resto, _re.IGNORECASE)
+            if m:
+                cmd_t, horas = m.group(1).strip().strip('"'), int(m.group(2))
+                tid = self.programador.agregar_every(cmd_t, horas)
+                exito(f"Tarea #{tid} programada: '{cmd_t}' cada {horas}h.")
+                return
+
+            # schedule add <cmd> at HH:MM
+            m = _re.search(r'^(.+?)\s+at\s+(\d{1,2}:\d{2})$', resto, _re.IGNORECASE)
+            if m:
+                cmd_t, hora = m.group(1).strip().strip('"'), m.group(2)
+                tid = self.programador.agregar_at(cmd_t, hora)
+                exito(f"Tarea #{tid} programada: '{cmd_t}' a las {hora} cada día.")
+                return
+
+            rprint("[red]Formato no reconocido.[/red]")
+            mostrar_sugerencia("schedule")
+            return
+
+        rprint("[red]Subcomando desconocido. Usa: schedule add|list|cancel[/red]")
+
+    def _handle_auth(self, command: str):
+        """Gestiona login, logout, whoami y gestión de usuarios."""
+        parts = command.strip().split()
+        sub = parts[0].lower()
+
+        if sub == "login":
+            if len(parts) < 3:
+                rprint("[yellow]Uso: login <usuario> <contraseña>[/yellow]")
+                return
+            nombre, pwd = parts[1], parts[2]
+            if self.gestor_usuarios.login(nombre, pwd):
+                exito(f"Bienvenido, {nombre} [{self.gestor_usuarios.rol_actual}]")
+            else:
+                rprint("[bold red]Usuario o contraseña incorrectos.[/bold red]")
+
+        elif sub == "logout":
+            self.gestor_usuarios.logout()
+            exito("Sesion cerrada.")
+
+        elif sub == "whoami":
+            self.gestor_usuarios.whoami()
+
+        elif sub == "users":
+            if len(parts) < 2:
+                rprint(
+                    "[yellow]Subcomandos: users list | users add <nombre> <pass> <rol> | "
+                    "users delete <nombre> | users passwd <nombre> <nueva_pass>[/yellow]"
+                )
+                return
+            accion = parts[1].lower()
+
+            if accion == "list":
+                self.gestor_usuarios.listar_usuarios()
+
+            elif accion == "add":
+                if len(parts) < 5:
+                    rprint("[yellow]Uso: users add <nombre> <contraseña> <rol>[/yellow]")
+                    rprint("[dim]Roles disponibles: admin, developer, viewer[/dim]")
+                    return
+                nombre, pwd, rol = parts[2], parts[3], parts[4].lower()
+                if self.gestor_usuarios.agregar_usuario(nombre, pwd, rol):
+                    exito(f"Usuario '{nombre}' creado con rol '{rol}'.")
+
+            elif accion == "delete":
+                if len(parts) < 3:
+                    rprint("[yellow]Uso: users delete <nombre>[/yellow]")
+                    return
+                nombre = parts[2]
+                try:
+                    conf = input(f"Eliminar usuario '{nombre}'? (s/n): ").strip().lower()
+                except (EOFError, KeyboardInterrupt):
+                    conf = "n"
+                if conf == "s" and self.gestor_usuarios.eliminar_usuario(nombre):
+                    exito(f"Usuario '{nombre}' eliminado.")
+
+            elif accion == "passwd":
+                if len(parts) < 4:
+                    rprint("[yellow]Uso: users passwd <nombre> <nueva_contraseña>[/yellow]")
+                    return
+                nombre, nueva = parts[2], parts[3]
+                if self.gestor_usuarios.cambiar_password(nombre, nueva):
+                    exito(f"Contraseña de '{nombre}' actualizada.")
+
+            else:
+                rprint(f"[red]Subcomando desconocido: '{accion}'. Usa: list, add, delete, passwd[/red]")
+
+    def _handle_diff(self, command: str):
+        """
+        Compara las tablas de dos bases de datos.
+
+        Formas de uso:
+          diff                              — compara connector actual vs connector2 (si existe)
+          diff <archivo.db>                 — compara actual vs otro SQLite
+          diff <archivo.db> <archivo2.db>   — compara dos SQLite entre sí
+          diff connect                      — muestra cómo configurar un segundo conector
+        """
+        if not self.connector or not self.connector.is_connected:
+            rprint("[red]Primero conéctate a una base de datos con 'connect'.[/red]")
+            return
+
+        parts = command.strip().split()
+        args  = parts[1:]  # todo después de "diff"
+
+        # ── sin argumentos: usar connector2 si existe ─────────────────────────
+        if not args:
+            if self.connector2 and self.connector2.is_connected:
+                comparar_bds(self.connector, self.connector2)
+            else:
+                rprint(
+                    "[yellow]Uso del comando diff:[/yellow]\n\n"
+                    "  [cyan]diff <archivo.db>[/cyan]\n"
+                    "    Compara la BD actual con otro archivo SQLite.\n"
+                    "    Ej: [white]diff otra_bd.db[/white]\n\n"
+                    "  [cyan]diff <archivo1.db> <archivo2.db>[/cyan]\n"
+                    "    Compara dos archivos SQLite entre sí.\n"
+                    "    Ej: [white]diff produccion.db staging.db[/white]\n\n"
+                    "  [cyan]connect2 sqlite <archivo.db>[/cyan]\n"
+                    "    Conecta un segundo conector y luego escribe [white]diff[/white] para comparar."
+                )
+            return
+
+        # ── helper: crear conector SQLite rápido ─────────────────────────────
+        def _sqlite(path: str):
+            from connectors.sqlite_connector import SQLiteConnector
+            c = SQLiteConnector()
+            c.connect(db_path=path)
+            return c
+
+        try:
+            if len(args) == 1:
+                # diff <archivo2.db>  →  actual vs archivo2
+                c2 = _sqlite(args[0])
+                comparar_bds(self.connector, c2)
+
+            elif len(args) == 2:
+                # diff <archivo1.db> <archivo2.db>  →  ambos SQLite
+                c1 = _sqlite(args[0])
+                c2 = _sqlite(args[1])
+                comparar_bds(c1, c2)
+
+            else:
+                rprint("[red]Demasiados argumentos. Usa: diff [archivo1.db] [archivo2.db][/red]")
+
+        except Exception as e:
+            rprint(f"[red]Error al comparar: {e}[/red]")
+
+    def _connect2(self, command: str):
+        """Conecta un segundo conector SQLite para usar con 'diff'."""
+        parts = command.split()
+        if len(parts) < 3 or parts[1].lower() != "sqlite":
+            rprint("[yellow]Uso: connect2 sqlite <archivo.db>[/yellow]")
+            return
+        db_path = parts[2]
+        try:
+            from connectors.sqlite_connector import SQLiteConnector
+            self.connector2 = SQLiteConnector()
+            self.connector2.connect(db_path=db_path)
+            exito(f"Segundo conector listo: SQLite '{db_path}'")
+        except Exception as e:
+            rprint(f"[red]Error: {e}[/red]")
+            self.connector2 = None
+
+    # ── Control por voz (NexusVoice) ───────────────────────────────────────────
+
+    def _get_voz(self):
+        """Inicializa el asistente de voz la primera vez que se usa."""
+        if self.voz is None:
+            from features.asistente_voz import AsistenteVoz
+            self.voz = AsistenteVoz()
+        return self.voz
+
+    def _voz_no_disponible(self, voz):
+        """Muestra ayuda si las dependencias de voz no están instaladas."""
+        ux_error("El control por voz no está disponible.")
+        rprint(f"[dim]Detalle: {voz.error_init or 'dependencias ausentes'}[/dim]")
+        rprint("[yellow]Instala las dependencias con:[/yellow]")
+        rprint("  [white]pip install SpeechRecognition pyttsx3 pyaudio[/white]")
+
+    def _procesar_voz(self, texto: str):
+        """Traduce el texto reconocido a un comando y lo ejecuta, narrando el
+        resultado en voz alta. Reutiliza ai_helper + el executor existentes."""
+        voz = self._get_voz()
+        cmd = expandir_abreviacion(texto).strip()
+        low = cmd.lower()
+
+        # Palabras clave que indican que ya es un comando directo (no lenguaje natural)
+        directos = (
+            "select", "insert", "update", "delete", "create", "drop", "show",
+            "connect", "status", "disconnect", "find", "get ", "set ", "keys",
+            "del ", "import", "export", "migrate", "panel", "help", "diff",
+        )
+        es_directo = any(low.startswith(k) for k in directos)
+
+        if not es_directo:
+            sql, fuente = generar_sql(cmd, self.connector, self.mode)
+            if not sql:
+                rprint("[yellow]💬 No reconocí ese comando por voz.[/yellow]")
+                voz.hablar("No reconocí ese comando. ¿Puedes repetirlo?")
+                return
+            etiqueta = "🧠 IA" if fuente == "ia" else "🔤 patrón"
+            rprint(f"[bold cyan]{etiqueta} → SQL generado:[/bold cyan] [white]{sql}[/white]")
+            cmd = sql
+
+        # Ejecutar y narrar el resultado
+        prev = self.last_results
+        self.last_exec_error = None
+        try:
+            self.execute(cmd)
+        except Exception as e:
+            rprint(f"[bold red]ERROR:[/bold red] {e}")
+            voz.hablar("Ocurrió un error al ejecutar el comando.")
+            return
+
+        if self.last_exec_error:
+            # Extraer nombre de tabla del mensaje si es error 1146 (tabla no existe)
+            import re as _re_voz
+            m = _re_voz.search(r"Table '[^']*\.([^']+)' doesn't exist", self.last_exec_error)
+            if m:
+                voz.hablar(f"No encontré la tabla {m.group(1)} en la base de datos.")
+            else:
+                voz.hablar(f"Error al ejecutar: {self.last_exec_error[:80]}")
+        elif self.last_results is not None and self.last_results is not prev:
+            voz.hablar(resumir_resultado(self.last_results))
+        else:
+            voz.hablar("Listo.")
+
+    def _handle_voice_once(self):
+        """Captura un único comando por voz, lo ejecuta y vuelve al modo texto."""
+        voz = self._get_voz()
+        if not voz.disponible:
+            self._voz_no_disponible(voz)
+            return
+
+        rprint("[bold magenta]🎙️  Escuchando... (habla ahora)[/bold magenta]")
+        texto, err = voz.escuchar()
+        if err:
+            advertencia(err)
+            return
+        rprint(f"[bold green]👤 Escuché:[/bold green] [white]\"{texto}\"[/white]")
+        self._procesar_voz(texto)
+
+    def _handle_voice_test(self, command: str):
+        """Simula el pipeline de voz SIN micrófono (respaldo para la demo).
+        Uso: voice test <frase en español>"""
+        # Quitar el prefijo 'voz test' / 'voice test'
+        resto = command.strip()
+        for pref in ("voice test", "voz test"):
+            if resto.lower().startswith(pref):
+                resto = resto[len(pref):].strip().strip('"').strip("'")
+                break
+        if not resto:
+            rprint("[yellow]Uso: voice test <frase>[/yellow] — ej: voice test muestra usuarios")
+            return
+        rprint(f"[bold green]👤 (simulado):[/bold green] [white]\"{resto}\"[/white]")
+        self._procesar_voz(resto)
+
+    def _handle_voice_engine(self, command: str):
+        """Cambia o muestra el motor de transcripción de voz.
+        Uso: voice engine [auto|google|vosk]"""
+        voz = self._get_voz()
+        parts = command.strip().split()
+        if len(parts) < 3:
+            estado_vosk = "disponible" if voz.vosk_disponible() else "no instalado"
+            rprint(
+                f"[cyan]Motor de voz actual:[/cyan] [white]{voz.motor}[/white]\n"
+                f"[dim]Offline (Vosk): {estado_vosk}[/dim]\n"
+                "[yellow]Uso: voice engine auto|google|vosk[/yellow]\n"
+                "  [white]auto[/white]   = Google online, con respaldo offline si no hay internet\n"
+                "  [white]google[/white] = solo online (mejor precisión)\n"
+                "  [white]vosk[/white]   = solo offline (sin internet)"
+            )
+            return
+        motor = parts[2].lower()
+        if motor in ("vosk", "auto") and not voz.vosk_disponible():
+            advertencia("El modelo de voz offline (Vosk) no está instalado.")
+            rprint("[dim]Instálalo con: pip install vosk  y descarga un modelo en español.[/dim]")
+        if voz.set_motor(motor):
+            exito(f"Motor de voz cambiado a '{motor}'.")
+        else:
+            rprint("[red]Motor no válido. Usa: auto, google o vosk.[/red]")
+
+    def _handle_voice_loop(self):
+        """Modo voz continuo: escucha, ejecuta y responde hasta oír 'salir'."""
+        voz = self._get_voz()
+        if not voz.disponible:
+            self._voz_no_disponible(voz)
+            return
+
+        banner = Text()
+        banner.append("🎙️  MODO VOZ ACTIVADO\n", style="bold magenta")
+        banner.append("Habla un comando en español tras el aviso.\n", style="white")
+        banner.append("Di ", style="dim")
+        banner.append("'salir'", style="bold yellow")
+        banner.append(" o ", style="dim")
+        banner.append("Ctrl+C", style="bold yellow")
+        banner.append(" para volver al modo texto.", style="dim")
+        self.console.print(Panel(banner, border_style="magenta", expand=False))
+        voz.hablar("Modo voz activado. Te escucho.")
+
+        fallos = 0
+        while True:
+            try:
+                rprint("\n[bold magenta]🎙️  Escuchando...[/bold magenta]")
+                texto, err = voz.escuchar()
+
+                if err:
+                    advertencia(err)
+                    fallos += 1
+                    if fallos >= 4:
+                        rprint("[yellow]Demasiados intentos fallidos. Saliendo del modo voz.[/yellow]")
+                        voz.hablar("Saliendo del modo voz.")
+                        break
+                    continue
+
+                fallos = 0
+                rprint(f"[bold green]👤 Escuché:[/bold green] [white]\"{texto}\"[/white]")
+
+                if es_palabra_salir(texto):
+                    voz.hablar("Saliendo del modo voz. Hasta luego.")
+                    rprint("[bold magenta]🎙️  Modo voz desactivado.[/bold magenta]")
+                    break
+
+                self._procesar_voz(texto)
+
+            except KeyboardInterrupt:
+                rprint("\n[bold magenta]🎙️  Modo voz desactivado.[/bold magenta]")
+                break
+
     # ==================== COMANDOS BÁSICOS ====================
 
     def _exit(self):
         """Salir de la aplicación"""
         if self.connector and self.connector.is_connected:
             self._disconnect()
-        rprint("\n[bold green]Hasta luego[/bold green]")
+        self.programador.detener()
+        rprint("\n[bold cyan]👋 Hasta luego — Nexus-DB[/bold cyan]")
         self.running = False
 
     def _help(self):
@@ -194,9 +984,37 @@ class REPL:
         help_text.append("  export <archivo.csv>                        - Exportar últimos resultados a CSV\n")
         help_text.append("  export_sql <tabla> <archivo.sql>            - Exportar tabla/colección a script\n")
         help_text.append("  export_db <archivo.sql>                     - Exportar BD completa (esquema y datos)\n")
-        help_text.append("  migrate <origen> <destino> <salida> [--sim] - Migrar base de datos por ETL (Jimmy)\n")
-        help_text.append("  validate backup <ruta> <motor> <db_name>    - Validar integridad de backup en Docker (Iker)\n")
-        help_text.append("  help                                        - Muestra esta ayuda\n")
+        help_text.append("  migrate <origen> <destino> <salida> [--sim] - Migrar base de datos por ETL\n")
+        help_text.append("  validate backup <ruta> <motor> <db_name>    - Validar integridad de backup en Docker\n")
+
+        help_text.append("\n🎙️  CONTROL POR VOZ (NexusVoice):\n", style="bold magenta")
+        help_text.append("  voice                                       - Modo voz continuo (habla tus comandos)\n")
+        help_text.append("  voice once                                  - Captura un solo comando por voz\n")
+        help_text.append("  voice test <frase>                          - Prueba el pipeline de voz sin micrófono\n")
+        help_text.append("  voice engine auto|google|vosk               - Motor de voz (vosk = offline, sin internet)\n")
+
+        help_text.append("\nNEXUS-DB EXTENSIONS:\n", style="bold green")
+        help_text.append('  ai "<texto>"                                - Convierte español a SQL con IA (Claude) y lo ejecuta\n')
+        help_text.append("  panel                                       - Panel de consultas activas / lentas\n")
+        help_text.append("  schedule add <cmd> at HH:MM                 - Programar tarea diaria\n")
+        help_text.append("  schedule add <cmd> every N hours            - Programar tarea periódica\n")
+        help_text.append("  schedule list                               - Listar tareas programadas\n")
+        help_text.append("  schedule cancel <id>                        - Cancelar tarea\n")
+        help_text.append("  diff [archivo2.db]                          - Comparar tablas: actual vs otro SQLite\n")
+        help_text.append("  diff <archivo1.db> <archivo2.db>            - Comparar dos archivos SQLite\n")
+        help_text.append("  connect2 sqlite <archivo.db>                - Conectar 2do conector para diff\n")
+
+        help_text.append("\nUSUARIOS:\n", style="bold magenta")
+        help_text.append("  login <usuario> <contraseña>                - Iniciar sesión\n")
+        help_text.append("  logout                                      - Cerrar sesión\n")
+        help_text.append("  whoami                                      - Ver usuario y rol actuales\n")
+        help_text.append("  users list                                  - Listar usuarios (admin)\n")
+        help_text.append("  users add <nombre> <pass> <rol>             - Crear usuario (admin)\n")
+        help_text.append("  users delete <nombre>                       - Eliminar usuario (admin)\n")
+        help_text.append("  users passwd <nombre> <nueva_pass>          - Cambiar contraseña\n")
+        help_text.append("  cls / clear                                 - Limpiar pantalla\n")
+
+        help_text.append("\n  help                                        - Muestra esta ayuda\n")
         help_text.append("  exit                                        - Salir de la aplicación\n")
 
         self.console.print(Panel(help_text, title="[bold white]COMANDOS DISPONIBLES[/bold white]", border_style="blue"))
@@ -278,15 +1096,17 @@ class REPL:
                 print("❌ MongoDB solo está disponible en modo NoSQL")
                 return
             if len(parts) < 3:
-                print("❌ Uso: connect mongodb <db> [host] [puerto]")
+                print("❌ Uso: connect mongodb <db> <usuario> <contraseña> [host] [puerto]")
                 return
             db_name = parts[2]
-            host = parts[3] if len(parts) > 3 else "localhost"
-            port = parts[4] if len(parts) > 4 else "27017"
+            user     = parts[3] if len(parts) > 3 else None
+            password = parts[4] if len(parts) > 4 else None
+            host     = parts[5] if len(parts) > 5 else "localhost"
+            port     = parts[6] if len(parts) > 6 else "27017"
             print(f"🔌 Conectando a MongoDB: {db_name}...")
             try:
                 self.connector = MongoDBConnector()
-                self.connector.connect(db_name=db_name, host=host, port=port)
+                self.connector.connect(db_name=db_name, user=user, password=password, host=host, port=port)
                 print(f"✅ Conectado a MongoDB: {db_name}")
             except Exception as e:
                 print(f"❌ Error: {e}")
@@ -362,21 +1182,23 @@ class REPL:
 
     def _select(self, command: str):
         """Ejecutar SELECT"""
+        self.last_exec_error = None
         success, data, error = self.connector.execute_query(command)
         if success:
             if data and 'columns' in data and data['columns']:
                 self.last_results = data  # Guardar para exportación
-                self.formatter.print_table(data['columns'], data['rows'])
+                self.formatter.print_table(data['columns'], data['rows'], paginate=True)
                 rprint(f"\n[bold cyan]INFO: Total:[/bold cyan] [white]{len(data['rows'])} fila(s)[/white]")
             elif data and 'affected_rows' in data:
                 rprint(f"[bold green]OK: Éxito:[/bold green] [white]{data['affected_rows']} fila(s) afectada(s)[/white]")
             else:
                 rprint("[bold yellow]INFO: Consulta ejecutada sin resultados.[/bold yellow]")
         else:
+            self.last_exec_error = error
             rprint(f"[bold red]ERROR SQL:[/bold red] [white]{error}[/white]")
 
     def _export(self, command: str):
-        """Exporta los últimos resultados a un archivo CSV"""
+        """Exporta los últimos resultados a un archivo CSV, JSON o TXT"""
         parts = command.split()
         if len(parts) < 2:
             rprint("[bold red]ERROR:[/bold red] Debes especificar un nombre de archivo. [yellow]Ej: export resultados.csv[/yellow]")
@@ -388,10 +1210,23 @@ class REPL:
 
         filename = parts[1]
         try:
-            with open(filename, 'w', newline='', encoding='utf-8') as f:
-                writer = csv.writer(f)
-                writer.writerow(self.last_results['columns'])
-                writer.writerows(self.last_results['rows'])
+            if filename.endswith(".json"):
+                import json
+                rows = self.last_results['rows']
+                cols = self.last_results['columns']
+                data_list = [dict(zip(cols, row)) for row in rows]
+                with open(filename, 'w', encoding='utf-8') as f:
+                    json.dump(data_list, f, indent=4, default=str)
+            elif filename.endswith(".txt") or filename.endswith(".md"):
+                from rich.console import Console
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f_console = Console(file=f, force_terminal=False)
+                    self.formatter.print_table(self.last_results['columns'], self.last_results['rows'], custom_console=f_console)
+            else:
+                with open(filename, 'w', newline='', encoding='utf-8') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(self.last_results['columns'])
+                    writer.writerows(self.last_results['rows'])
             rprint(f"[bold green]OK: Datos exportados correctamente a:[/bold green] [white]{filename}[/white]")
         except Exception as e:
             rprint(f"[bold red]ERROR al exportar:[/bold red] {e}")

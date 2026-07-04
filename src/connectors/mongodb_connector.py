@@ -20,8 +20,13 @@ class MongoDBConnector(BaseNoSQLConnector):
             self.db_name = kwargs.get('db_name')
             self.host = kwargs.get('host', 'localhost')
             self.port = int(kwargs.get('port', 27017))
-            
-            uri = f"mongodb://{self.host}:{self.port}/"
+            user = kwargs.get('user') or kwargs.get('username')
+            password = kwargs.get('password')
+
+            if user and password:
+                uri = f"mongodb://{user}:{password}@{self.host}:{self.port}/{self.db_name}?authSource=admin"
+            else:
+                uri = f"mongodb://{self.host}:{self.port}/"
             self.client = MongoClient(uri, serverSelectionTimeoutMS=5000)
             # Verifica la conexión
             self.client.server_info()

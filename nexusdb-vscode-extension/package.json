@@ -1,0 +1,40 @@
+{
+  "name": "nexusdb-cli",
+  "displayName": "NexusDB CLI",
+  "description": "Lanza NexusDB (CLI de administración de bases de datos SQL y NoSQL) desde VS Code. No requiere Python ni clonar ningún repositorio: el ejecutable va incluido.",
+  "version": "0.0.3",
+  "publisher": "NexusDBCLI",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "nexusdb.start",
+        "title": "NexusDB: Iniciar CLI",
+        "icon": "$(database)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        { "command": "nexusdb.start" }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.x",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0"
+  }
+}

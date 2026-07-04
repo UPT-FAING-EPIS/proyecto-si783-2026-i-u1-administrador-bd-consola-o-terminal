@@ -1,0 +1,182 @@
+[2026-06-26 23:16:46] anon | CMD: status
+[2026-06-26 23:16:53] anon | CMD: clear
+[2026-06-26 23:55:30] anon | CMD: conne
+[2026-06-26 23:56:05] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122:3308
+[2026-06-26 23:56:47] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122:3308
+[2026-06-26 23:57:02] anon | CMD: connect postgres test_db test_user Upt2026 147.93.7.122:5432
+[2026-06-26 23:57:09] anon | CMD: connect mongodb test_db 147.93.7.122 27017
+[2026-06-26 23:57:57] anon | CMD: docker exec mongodb_test mongosh -u admin -p Upt2026 --authenticationDatabase admin test_db --eval "db.categorias.find(); db.productos_mongo.find();"
+[2026-06-26 23:59:27] anon | CMD: show tables
+[2026-06-26 23:59:31] anon | CMD: status
+[2026-06-26 23:59:36] anon | CMD: disconnect
+[2026-06-27 00:00:24] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-27 00:00:34] anon | CMD: show tables
+[2026-06-27 00:01:03] anon | CMD: select * from clientes
+[2026-06-27 00:01:22] anon | CMD: disconect
+[2026-06-27 00:01:32] anon | CMD: disconnect
+[2026-06-27 00:01:42] anon | CMD: connect postgres test_db test_user Upt2026 147.93.7.122 5432
+[2026-06-27 00:01:50] anon | CMD: show tables
+[2026-06-27 00:02:01] anon | CMD: select * from ventas
+[2026-06-27 00:02:08] anon | CMD: disonnect
+[2026-06-27 00:02:22] anon | CMD: disconnect
+[2026-06-27 00:03:06] anon | CMD: connect mongodb test_db localhost 27017 admin Upt2026
+[2026-06-27 00:03:17] anon | CMD: connect mongodb test_db localhost 27017 admin Upt2026
+[2026-06-27 00:03:21] anon | CMD: show tables
+[2026-06-27 00:05:45] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-27 00:06:37] anon | LOGIN fallido para 'dayan'
+[2026-06-27 00:07:44] anon | LOGOUT
+[2026-06-27 00:07:50] anon | LOGIN fallido para 'dayan'
+[2026-06-27 00:08:16] anon | CMD: ai from
+[2026-06-27 00:08:28] anon | CMD: ai mostrar usuarios
+[2026-06-27 00:08:36] anon | CMD: ai muestra usuarios
+[2026-06-27 00:10:44] anon | CMD: panel
+[2026-06-27 00:12:12] anon | CMD: show	tables
+[2026-06-27 00:12:30] anon | CMD: show tables
+[2026-06-27 00:13:00] anon | CMD: diff clientes:pedidos
+[2026-06-27 00:14:21] anon | CMD: diff mysql:clientes mysql:pedidos
+[2026-06-27 00:16:18] anon | CMD: schedule add select * from clientes at 00:17
+[2026-06-27 00:16:35] anon | CMD: schedule list
+[2026-06-27 00:17:01] anon | CMD: select * from clientes
+[2026-06-27 00:17:15] anon | CMD: schedule list
+[2026-06-27 00:17:28] anon | CMD: diff cancel 1
+[2026-06-27 00:17:44] anon | CMD: schedule cancel 1
+[2026-06-27 00:20:54] anon | CMD: disconnect
+[2026-06-27 00:21:14] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-27 00:23:39] anon | CMD: sh
+[2026-06-27 00:27:39] anon | CMD: connect mysql test_db root Upt2026 localhost 3308
+[2026-06-27 00:28:04] anon | CMD: connect mysql test_db root Upt2026 localhost 3308
+[2026-06-27 00:28:18] anon | CMD: connect postgres test_db test_user Upt2026 localhost 5432
+[2026-06-27 00:29:07] anon | CMD: connect mysql test_db root Upt2026 localhost 3308
+[2026-06-27 00:29:27] anon | CMD: connect postgres test_db test_user Upt2026 localhost 5432
+[2026-06-27 00:30:36] anon | CMD: connect postgres test_db test_user Upt2026 localhost 5432
+[2026-06-27 00:31:27] anon | CMD: connect postgres test_db test_user Upt2026 localhost 5432
+[2026-06-27 00:32:14] anon | CMD: disconnect
+[2026-06-27 00:33:04] anon | CMD: connect mongodb test_db 147.93.7.122 27017 admin Upt2026
+[2026-06-27 00:33:18] anon | CMD: disconnect
+[2026-06-27 00:33:45] anon | CMD: connect mysql test_db root Upt2026 localhost 3308
+[2026-06-27 00:39:36] anon | CMD: connect mysql test_db root Upt2026 localhost 3308
+[2026-06-27 00:40:30] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-27 00:40:44] anon | CMD: show tables
+[2026-06-28 14:37:37] anon | CMD: connect sqlite C:\Users\USUARIO\AppData\Local\Temp\nexus_test.db
+[2026-06-28 14:37:52] anon | CMD: connect sqlite C:\Users\USUARIO\AppData\Local\Temp\nexus_test.db
+[2026-06-28 14:37:52] anon | CMD: SELECT * FROM usuarios
+[2026-06-28 14:37:52] anon | CMD: SELECT COUNT(*) FROM usuarios
+[2026-06-28 14:46:42] anon | CMD: voice
+[2026-06-28 14:48:18] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-28 14:48:31] anon | CMD: voice
+[2026-06-28 14:48:40] anon | CMD: exist
+[2026-06-28 14:50:22] anon | CMD: connect sqlite prueba.db
+[2026-06-28 14:50:34] anon | CMD: create table usuarios (id integer primary key, nombre text, edad int)
+[2026-06-28 14:50:43] anon | CMD: insert into usuarios (nombre, edad) values ('Ana', 30)
+[2026-06-28 14:50:47] anon | CMD: insert into usuarios (nombre, edad) values ('Beto', 25)
+[2026-06-28 14:51:28] anon | CMD: SELECT * FROM usuarios
+[2026-06-28 14:54:04] anon | CMD: SELECT * FROM usuarios
+[2026-06-28 14:54:51] anon | CMD: ai_helper
+[2026-06-28 15:04:37] anon | CMD: connect sqlite C:\Users\USUARIO\AppData\Local\Temp\nexus_cerebro.db
+[2026-06-28 15:13:01] anon | CMD: connect sqlite C:\Users\USUARIO\AppData\Local\Temp\nexus_live.db
+[2026-06-28 16:42:04] anon | CMD: show tables
+[2026-06-28 16:44:09] anon | CMD: connect sqlite prueba.db
+[2026-06-28 16:44:26] anon | CMD: begin
+[2026-06-28 16:44:38] anon | CMD: insert into usuarios values (3, 'Juan', 'juan@mail.com')
+[2026-06-28 16:44:45] anon | CMD: select * from usuarios
+[2026-06-28 16:44:57] anon | CMD: rollback
+[2026-06-28 16:45:06] anon | CMD: select * from usuarios
+[2026-06-28 16:45:42] anon | CMD: rollback
+[2026-06-28 19:10:26] anon | CMD: connect sqlite prueba.db
+[2026-06-28 19:10:30] anon | CMD: select * from usuarios
+[2026-06-28 19:10:41] anon | CMD: insert into usuarios values (4, 'Juan', 'juan@mail.com')
+[2026-06-28 19:10:46] anon | CMD: rollback
+[2026-06-28 19:13:45] anon | CMD: select * from usuarios
+[2026-06-28 19:13:52] anon | CMD: begin
+[2026-06-28 19:14:51] anon | CMD: insert into usuarios values (5, 'Juan', 'juan@mail.com')
+[2026-06-28 19:14:55] anon | CMD: rollback
+[2026-06-28 19:15:21] anon | CMD: select * from usuarios
+[2026-06-28 19:17:01] anon | CMD: select * from usuarios where nombre
+[2026-06-28 19:17:08] anon | CMD: select * from usuarios where id
+[2026-06-28 19:17:22] anon | CMD: select * from usuarios where edad
+[2026-06-28 19:17:35] anon | CMD: select * from usuarios where nombre
+[2026-06-28 19:17:53] anon | CMD: search "Carlos"
+[2026-06-28 19:18:05] anon | CMD: search "Ana"
+[2026-06-28 19:18:56] anon | CMD: bookmark save mis_ventas "select u.nombre, v.total from usuarios u join ventas v on u.id = v.usuario_id"
+[2026-06-28 19:19:04] anon | CMD: bookmark list
+[2026-06-28 19:19:10] anon | CMD: mis_ventas
+[2026-06-28 19:20:17] anon | CMD: bookmark run mis_ventas
+[2026-06-28 19:20:17] anon | CMD: select u.nombre, v.total from usuarios u join ventas v on u.id = v.usuario_id
+[2026-06-28 19:21:08] anon | CMD: bookmark save edad "select * from usuarios where edad"
+[2026-06-28 19:21:16] anon | CMD: bookmark run edad
+[2026-06-28 19:21:16] anon | CMD: select * from usuarios where edad
+[2026-06-28 19:21:41] anon | CMD: generate_erd
+[2026-06-28 19:23:31] anon | CMD: panel
+[2026-06-28 19:24:03] anon | CMD: bookmark list
+[2026-06-29 20:09:09] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-29 20:10:11] anon | CMD: show tables
+[2026-06-29 20:39:40] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-29 20:39:51] anon | CMD: show tables
+[2026-06-30 00:57:21] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-30 00:57:48] anon | CMD: SELECT * FROM las
+[2026-06-30 01:00:55] anon | CMD: show tables
+[2026-06-30 01:03:02] anon | CMD: selec
+[2026-06-30 01:03:19] anon | CMD: SELECT * FROM tables
+[2026-06-30 01:03:26] anon | CMD: SELECT * FROM clientes
+[2026-06-30 10:56:14] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-30 11:04:14] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-30 11:04:50] anon | CMD: SELECT * FROM clientes
+[2026-06-30 11:05:08] anon | CMD: SELECT * FROM todas
+[2026-06-30 11:05:28] anon | CMD: SELECT * FROM facturas
+[2026-06-30 11:05:35] anon | CMD: SELECT * FROM facturas
+[2026-06-30 11:08:29] anon | CMD: SELECT * FROM zapatos
+[2026-06-30 11:14:17] anon | CMD: SELECT * FROM todas
+[2026-06-30 11:14:39] anon | CMD: show tables
+[2026-06-30 11:14:54] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-30 11:15:13] anon | CMD: show tables
+[2026-06-30 11:15:19] anon | CMD: SELECT * FROM tabla
+[2026-06-30 11:15:27] anon | CMD: SELECT * FROM clientes
+[2026-06-30 11:15:44] anon | CMD: SELECT * FROM pedidos
+[2026-06-30 11:16:08] anon | CMD: SELECT * FROM cuántos
+[2026-06-30 11:16:21] anon | CMD: SELECT * FROM el
+[2026-06-30 11:16:29] anon | CMD: SELECT * FROM el
+[2026-06-30 11:19:52] anon | CMD: show tables
+[2026-06-30 11:20:12] anon | CMD: SELECT * FROM pedidos
+[2026-06-30 11:27:28] anon | CMD: SELECT * FROM pedidos LIMIT 3;
+[2026-06-30 11:35:21] anon | CMD: ai
+[2026-06-30 11:35:36] anon | CMD: muéstrame los pedidos más caros
+[2026-06-30 11:35:42] anon | CMD: ai "muéstrame los pedidos más caros"
+[2026-06-30 11:35:46] anon | CMD: SELECT * FROM pedidos
+[2026-06-30 11:36:13] anon | CMD: ai "muéstrame los 3 pedidos más antiguos"
+[2026-06-30 11:36:16] anon | CMD: SELECT * FROM 3
+[2026-06-30 11:39:41] anon | CMD: SELECT * FROM ventas WHERE producto = 'Laptop';
+[2026-06-30 11:40:17] anon | CMD: show tables
+[2026-06-30 11:40:41] anon | CMD: SELECT * FROM pedidos WHERE producto = 'Laptop';
+[2026-06-30 11:41:13] anon | CMD: SELECT * FROM pedidos WHERE producto = "Laptop"
+[2026-06-30 11:41:55] anon | CMD: SELECT * FROM pedidos
+[2026-06-30 11:42:31] anon | CMD: SELECT *
+FROM pedidos
+WHERE (producto = 'Laptop' OR producto = 'Monitor')
+  AND total > 600;
+[2026-06-30 11:46:01] anon | CMD: DELETE FROM pedidos WHERE id = 8;
+[2026-06-30 12:04:32] anon | CMD: voiceEXIT
+[2026-06-30 14:01:59] anon | CMD: connect mongodb test_db 147.93.7.122 27017 admin Upt2026
+[2026-06-30 14:02:04] anon | CMD: show collections
+[2026-06-30 14:02:11] anon | CMD: find categorias {}
+[2026-06-30 14:02:15] anon | CMD: show keys
+[2026-06-30 14:02:21] anon | CMD: show tables
+[2026-06-30 15:02:20] anon | CMD: connect mongodb test_db 147.93.7.122 27017 admin Upt2026
+[2026-06-30 15:02:34] anon | CMD: connect mongodb test_db 147.93.7.122 27017 admin Upt2026
+[2026-06-30 15:03:14] anon | CMD: connect mysql test_db root Upt2026 147.93.7.122 3308
+[2026-06-30 15:03:32] anon | CMD: show tables
+[2026-06-30 15:03:39] anon | CMD: SELECT * FROM clientes
+[2026-06-30 15:03:58] anon | CMD: SELECT * FROM número
+[2026-06-30 15:04:07] anon | CMD: SELECT * FROM cantidad
+[2026-06-30 15:04:14] anon | CMD: SELECT COUNT(*) FROM pedidos
+[2026-06-30 15:04:36] anon | CMD: exug
+[2026-06-30 15:04:57] anon | CMD: connect mongodb test_db 147.93.7.122 27017 admin Upt2026
+[2026-06-30 15:05:01] anon | CMD: status
+[2026-06-30 15:06:30] anon | CMD: connect mongodb test_db admin Upt2026 147.93.7.122 27017
+[2026-06-30 15:06:50] anon | CMD: show tables
+[2026-06-30 15:07:13] anon | CMD: find {}
+[2026-06-30 15:07:21] anon | CMD: show collections
+[2026-06-30 15:07:47] anon | CMD: find categorias {}
+[2026-06-30 15:08:09] anon | CMD: find categorias {"prioridad": 1}
+[2026-06-30 15:08:22] anon | CMD: find categorias {"nombre": C}
+[2026-06-30 15:08:29] anon | CMD: find categorias {"nombre": Celulares}
+[2026-06-30 15:08:52] anon | CMD: find categorias {"nombre": "Celulares"}
